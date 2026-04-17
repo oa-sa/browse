@@ -1,2 +1,3 @@
 .vercel
 AuthKey_*.p8
+static/services.json
