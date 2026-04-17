@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Open Australian Services Archive</title>
-  <meta name="description" content="An open dataset of 89,000+ support services across Australia. Browse, search and explore.">
+  <meta name="description" content="An open dataset of 24,000+ support services across Australia. Browse, search and explore.">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
@@ -686,7 +686,7 @@
     <div class="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-title">Service Explorer</div>
-        <div class="sidebar-desc">Search and filter 89,000+ services across Australia</div>
+        <div class="sidebar-desc">Search and filter 24,000+ services across Australia</div>
       </div>
       <div class="controls">
         <div class="filter-group">
@@ -852,7 +852,7 @@
 
     async function loadData() {
       try {
-        const estimated = 89600;
+        const estimated = 24500;
         let url = '/services/services.json?_size=1000&_shape=objects';
         let firstBatch = true;
 
