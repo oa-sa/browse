@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Australian Services Archive</title>
+  <meta name="description" content="An open dataset of 24,000+ support services across Australia. Browse, search and explore.">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f6f8fa;
+      --surface: #ffffff;
+      --surface-2: #f0f2f5;
+      --border: #d8dee4;
+      --text: #1f2328;
+      --text-secondary: #656d76;
+      --text-dim: #8b949e;
+      --accent: #0969da;
+      --green: #1a7f37;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 1000;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo-mark {
+      background: var(--green);
+      color: var(--bg);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 5px;
+      border-radius: 4px;
+    }
+
+    .header-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .header-stats strong { color: var(--text); font-weight: 600; }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-link {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .header-link:hover { color: var(--text); background: var(--surface-2); }
+
+    /* ===== MAIN LAYOUT ===== */
+    .main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 360px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .controls {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--text-dim); }
+
+    .filter-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .filter-select {
+      flex: 1;
+      padding: 7px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .filter-select:focus { border-color: var(--accent); }
+
+    .results-bar {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .clear-btn {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 11px;
+      font-family: inherit;
+    }
+
+    .clear-btn:hover { text-decoration: underline; }
+
+    .results-list {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) var(--surface);
+    }
+
+    .results-list::-webkit-scrollbar { width: 5px; }
+    .results-list::-webkit-scrollbar-track { background: var(--surface); }
+    .results-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .service-card {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .service-card:hover { background: var(--surface-2); }
+
+    .svc-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 3px;
+      line-height: 1.3;
+    }
+
+    .svc-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-right: 6px;
+    }
+
+    .svc-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .svc-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+      flex-wrap: wrap;
+    }
+
+    .svc-quality {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .q-complete { background: #16a34a; }
+    .q-partial { background: #ca8a04; }
+    .q-minimal { background: #dc2626; }
+
+    .svc-source {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .src-gov { background: #dbeafe; color: #1e40af; }
+    .src-osm { background: #d1fae5; color: #065f46; }
+
+    .no-results {
+      padding: 32px 12px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+
+    /* ===== MAP ===== */
+    .map-area {
+      flex: 1;
+      position: relative;
+    }
+
+    #map { width: 100%; height: 100%; }
+
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(246,248,250,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 28px; height: 28px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text { color: var(--text-secondary); font-size: 13px; }
+
+    /* ===== DETAIL PANEL ===== */
+    .detail {
+      position: absolute;
+      bottom: 16px; left: 16px;
+      max-width: 380px;
+      width: calc(100% - 32px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      z-index: 998;
+      display: none;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    }
+
+    .detail.visible { display: block; }
+
+    .detail-x {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 24px; height: 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .detail-x:hover { color: var(--text); }
+
+    .detail-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      padding-right: 28px;
+      line-height: 1.3;
+    }
+
+    .detail-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin: 8px 0 12px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 10px;
+      font-size: 12px;
+    }
+
+    .dl { color: var(--text-dim); }
+    .dv { color: var(--text); word-break: break-word; }
+    .dv a { color: var(--accent); text-decoration: none; }
+    .dv a:hover { text-decoration: underline; }
+
+    /* Tag colors */
+    .t-food{background:#dcfce7;color:#166534} .t-housing{background:#fef3c7;color:#92400e}
+    .t-health{background:#dbeafe;color:#1e40af} .t-mental_health{background:#ede9fe;color:#5b21b6}
+    .t-legal{background:#ffedd5;color:#9a3412} .t-employment{background:#d1fae5;color:#065f46}
+    .t-education{background:#cffafe;color:#155e75} .t-disability{background:#fae8ff;color:#86198f}
+    .t-family{background:#fee2e2;color:#991b1b} .t-community{background:#dcfce7;color:#14532d}
+    .t-financial{background:#fef9c3;color:#854d0e} .t-alcohol_drugs{background:#fee2e2;color:#b91c1c}
+    .t-information{background:#dbeafe;color:#1e3a8a} .t-transport{background:#f1f5f9;color:#475569}
+    .t-personal_care{background:#ede9fe;color:#6d28d9} .t-technology{background:#e0e7ff;color:#3730a3}
+    .t-other{background:var(--surface-2);color:var(--text-secondary)}
+
+    /* ===== CATEGORY CHIPS ===== */
+    .cat-chips {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 997;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      pointer-events: none;
+    }
+
+    .cat-chip {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      user-select: none;
+    }
+
+    .cat-chip:hover { border-color: var(--text-dim); }
+
+    .cat-chip.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .cat-chip .chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .cat-chip.active .chip-dot { background: #fff !important; }
+
+    .cat-chip .chip-count {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+
+    /* ===== DETAIL BADGES ===== */
+    .detail-badges {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin: 6px 0 8px;
+      flex-wrap: wrap;
+    }
+
+    .detail-quality {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .detail-quality .svc-quality { width: 8px; height: 8px; }
+
+    .leaflet-top.leaflet-left { top: 50px; }
+
+    /* ===== HIGHLIGHT MARKER ===== */
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(2.5); opacity: 0; }
+    }
+
+    .marker-highlight {
+      width: 20px; height: 20px;
+      position: relative;
+    }
+
+    .marker-highlight-dot {
+      width: 12px; height: 12px;
+      background: var(--accent);
+      border: 2.5px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      position: absolute;
+      top: 4px; left: 4px;
+    }
+
+    .marker-highlight-ring {
+      width: 20px; height: 20px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      position: absolute;
+      top: 0; left: 0;
+      animation: pulse-ring 1.2s ease-out infinite;
+    }
+
+    /* ===== DOWNLOAD BUTTON ===== */
+    .download-btn {
+      background: none;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 11px;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .download-btn:hover { text-decoration: underline; }
+
+    /* Leaflet overrides */
+    .leaflet-popup-content-wrapper{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;}
+    .leaflet-popup-tip{background:var(--surface);}
+
+    @media(max-width:768px){
+      .sidebar{display:none;}
+      .header-stats{display:none;}
+      .header-link.desktop{display:none;}
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <a href="/" class="logo">
+        <span class="logo-mark">OA</span>
+        Open Australian Services Archive
+      </a>
+      <div class="header-sep"></div>
+      <div class="header-stats">
+        <span><strong id="total-count">--</strong> services</span>
+        <span><strong>25</strong> sources</span>
+        <span><strong id="state-count">--</strong> states</span>
+        <span>updated <strong id="last-updated">--</strong></span>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="/static/oasa-whitepaper.pdf" target="_blank" rel="noopener" class="header-link desktop">White Paper</a>
+      <a href="https://github.com/oa-sa/data" target="_blank" rel="noopener" class="header-link desktop">Data</a>
+      <a href="https://github.com/oa-sa" target="_blank" rel="noopener" class="header-link">GitHub</a>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="sidebar">
+      <div class="controls">
+        <input type="text" class="search-input" id="search" placeholder="Search services..." />
+        <div class="filter-row">
+          <select class="filter-select" id="filter-state">
+            <option value="">All states</option>
+            <option value="ACT">ACT</option><option value="NSW" selected>NSW</option>
+            <option value="NT">NT</option><option value="QLD">QLD</option>
+            <option value="SA">SA</option><option value="TAS">TAS</option>
+            <option value="VIC">VIC</option><option value="WA">WA</option>
+          </select>
+          <select class="filter-select" id="filter-category">
+            <option value="">All categories</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <select class="filter-select" id="filter-suburb" style="flex:1">
+            <option value="">All suburbs</option>
+          </select>
+        </div>
+      </div>
+      <div class="results-bar">
+        <span id="results-count">Loading...</span>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="download-btn" id="download-csv" title="Download filtered results as CSV">&#8595; CSV</button>
+          <button class="clear-btn" id="clear-filters">Clear</button>
+        </div>
+      </div>
+      <div class="results-list" id="results-list"></div>
+    </div>
+
+    <div class="map-area">
+      <div id="map"></div>
+      <div class="cat-chips" id="cat-chips"></div>
+      <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-text">Loading services...</div>
+        <div style="width:200px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
+          <div id="loading-bar" style="width:0%;height:100%;background:var(--accent);border-radius:2px;transition:width 0.3s;"></div>
+        </div>
+        <div id="loading-count" style="font-size:11px;color:var(--text-dim);">0 records loaded</div>
+      </div>
+      <div class="detail" id="detail-panel">
+        <button class="detail-x" id="detail-close">&times;</button>
+        <div id="detail-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script>
+    let allServices = [];
+    let filteredServices = [];
+    let map, markers;
+    let highlightMarker = null;
+
+    function highlightIcon() {
+      return L.divIcon({
+        className: '',
+        html: `<div class="marker-highlight"><div class="marker-highlight-ring"></div><div class="marker-highlight-dot"></div></div>`,
+        iconSize: [20, 20], iconAnchor: [10, 10]
+      });
+    }
+
+    function setHighlight(lat, lng) {
+      if (highlightMarker) { map.removeLayer(highlightMarker); }
+      highlightMarker = L.marker([lat, lng], { icon: highlightIcon(), zIndexOffset: 1000, interactive: false });
+      highlightMarker.addTo(map);
+    }
+
+    function clearHighlight() {
+      if (highlightMarker) { map.removeLayer(highlightMarker); highlightMarker = null; }
+    }
+
+    const CAT = {
+      food:'Food Relief', housing:'Housing', health:'Health', mental_health:'Mental Health',
+      legal:'Legal', employment:'Employment', education:'Education', disability:'Disability',
+      family:'Family', community:'Community', financial:'Financial', alcohol_drugs:'Alcohol & Drugs',
+      information:'Information', transport:'Transport', personal_care:'Personal Care',
+      technology:'Technology', other:'Other'
+    };
+
+    const CAT_COLOR = {
+      food:'#16a34a', housing:'#d97706', health:'#2563eb', mental_health:'#7c3aed',
+      legal:'#ea580c', employment:'#059669', education:'#0891b2', disability:'#c026d3',
+      family:'#dc2626', community:'#15803d', financial:'#ca8a04', alcohol_drugs:'#e11d48',
+      information:'#1d4ed8', transport:'#64748b', personal_care:'#7c3aed',
+      technology:'#4f46e5', other:'#6b7280'
+    };
+
+    function markerIcon(cat) {
+      const c = CAT_COLOR[cat] || '#64748b';
+      return L.divIcon({
+        className: '',
+        html: `<div style="width:10px;height:10px;background:${c};border:2px solid #fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>`,
+        iconSize: [9, 9], iconAnchor: [5, 5]
+      });
+    }
+
+    function initMap() {
+      map = L.map('map').setView([-28.5, 134], 5);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+        maxZoom: 19
+      }).addTo(map);
+
+      markers = L.markerClusterGroup({
+        maxClusterRadius: 45,
+        showCoverageOnHover: false,
+        iconCreateFunction(cluster) {
+          const n = cluster.getChildCount();
+          const s = n > 100 ? 44 : n > 10 ? 36 : 30;
+          return L.divIcon({
+            html: `<div style="width:${s}px;height:${s}px;background:rgba(9,105,218,0.1);border:1.5px solid rgba(9,105,218,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0969da;font-family:Inter,sans-serif;">${n}</div>`,
+            className: '', iconSize: [s, s]
+          });
+        }
+      });
+      map.addLayer(markers);
+    }
+
+    async function loadData() {
+      try {
+        let data = [];
+        const estimated = 24500;
+        let url = '/services/services.json?_size=1000&_shape=objects';
+        while (url) {
+          const resp = await fetch(url);
+          const json = await resp.json();
+          if (json.rows) data.push(...json.rows);
+          const pct = Math.min(100, Math.round((data.length / estimated) * 100));
+          document.getElementById('loading-bar').style.width = pct + '%';
+          document.getElementById('loading-count').textContent = data.length.toLocaleString() + ' records loaded';
+          document.getElementById('loading-text').textContent = pct < 100 ? 'Loading services...' : 'Rendering map...';
+          if (json.next_url) {
+            url = json.next_url.startsWith('http') ? json.next_url : json.next_url;
+          } else {
+            url = null;
+          }
+        }
+        allServices = data;
+        document.getElementById('total-count').textContent = allServices.length.toLocaleString();
+        document.getElementById('state-count').textContent = new Set(allServices.map(s=>s.state).filter(Boolean)).size;
+        const dates = allServices.map(s=>s.source_date).filter(Boolean).sort().reverse();
+        if (dates.length) {
+          const d = new Date(dates[0] + 'T00:00:00');
+          document.getElementById('last-updated').textContent = d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+        }
+        buildCatFilter();
+        buildSuburbFilter();
+        document.getElementById('filter-category').value = 'employment';
+        applyFilters();
+        document.getElementById('loading').style.display = 'none';
+      } catch(e) {
+        console.error(e);
+        document.getElementById('loading').innerHTML = '<div style="color:#dc2626">Failed to load data</div>';
+      }
+    }
+
+    let activeChips = new Set();
+
+    function buildCatFilter() {
+      const sel = document.getElementById('filter-category');
+      const counts = {};
+      allServices.forEach(s => { counts[s.category] = (counts[s.category]||0)+1; });
+      Object.keys(CAT).forEach(k => {
+        if (!counts[k]) return;
+        const o = document.createElement('option');
+        o.value = k;
+        o.textContent = `${CAT[k]} (${counts[k].toLocaleString()})`;
+        sel.appendChild(o);
+      });
+      buildCatChips(counts);
+    }
+
+    function buildCatChips(counts) {
+      const container = document.getElementById('cat-chips');
+      container.innerHTML = '';
+      Object.keys(CAT).forEach(k => {
+        if (!counts[k]) return;
+        const chip = document.createElement('div');
+        chip.className = 'cat-chip';
+        chip.dataset.cat = k;
+        chip.innerHTML = `<span class="chip-dot" style="background:${CAT_COLOR[k]}"></span>${CAT[k]} <span class="chip-count">${counts[k].toLocaleString()}</span>`;
+        chip.addEventListener('click', () => toggleChip(k, chip));
+        container.appendChild(chip);
+      });
+    }
+
+    function toggleChip(cat, chip) {
+      if (activeChips.has(cat)) {
+        activeChips.delete(cat);
+        chip.classList.remove('active');
+      } else {
+        activeChips.add(cat);
+        chip.classList.add('active');
+      }
+      // Sync dropdown
+      if (activeChips.size === 1) {
+        document.getElementById('filter-category').value = [...activeChips][0];
+      } else {
+        document.getElementById('filter-category').value = '';
+      }
+      applyFilters();
+    }
+
+    function isOsm(s) {
+      return s.source_name && s.source_name.toLowerCase().includes('openstreetmap') ||
+             s.source_id && s.source_id.toLowerCase().includes('osm');
+    }
+
+    function qualityClass(q) {
+      if (q === 'complete') return 'q-complete';
+      if (q === 'partial') return 'q-partial';
+      return 'q-minimal';
+    }
+
+    function qualityLabel(q) {
+      if (q === 'complete') return 'Complete';
+      if (q === 'partial') return 'Partial';
+      return 'Minimal';
+    }
+
+    function renderServices(services) {
+      markers.clearLayers();
+      const list = document.getElementById('results-list');
+      list.innerHTML = '';
+      document.getElementById('results-count').textContent = services.length.toLocaleString() + ' results';
+
+      if (!services.length) {
+        list.innerHTML = '<div class="no-results">No services match your filters</div>';
+        return;
+      }
+
+      services.forEach(s => {
+        if (s.latitude && s.longitude) {
+          const m = L.marker([s.latitude, s.longitude], { icon: markerIcon(s.category) });
+          m.on('click', () => {
+            setHighlight(s.latitude, s.longitude);
+            showDetail(s);
+          });
+          markers.addLayer(m);
+        }
+      });
+
+      const limit = 400;
+      const frag = document.createDocumentFragment();
+      services.slice(0, limit).forEach(s => {
+        const d = document.createElement('div');
+        d.className = 'service-card';
+        const loc = [s.suburb, s.state].filter(Boolean).join(', ');
+        const srcClass = isOsm(s) ? 'src-osm' : 'src-gov';
+        const srcLabel = isOsm(s) ? 'OSM' : 'GOV';
+        const qClass = qualityClass(s.quality);
+        d.innerHTML = `
+          <div class="svc-name">${esc(s.name||'Unnamed')}</div>
+          <div class="svc-row">
+            <span class="svc-tag t-${s.category||'other'}">${CAT[s.category]||'Other'}</span>
+            <span class="svc-source ${srcClass}">${srcLabel}</span>
+            <span class="svc-quality ${qClass}" title="${qualityLabel(s.quality)}"></span>
+            <span class="svc-meta">${esc(loc)}</span>
+          </div>
+        `;
+        d.onclick = () => {
+          if (s.latitude && s.longitude) {
+            map.setView([s.latitude, s.longitude], 15);
+            setHighlight(s.latitude, s.longitude);
+          }
+          showDetail(s);
+        };
+        frag.appendChild(d);
+      });
+      list.appendChild(frag);
+      if (services.length > limit) {
+        const m = document.createElement('div');
+        m.className = 'no-results';
+        m.textContent = `Showing ${limit} of ${services.length.toLocaleString()}`;
+        list.appendChild(m);
+      }
+    }
+
+    function showDetail(s) {
+      const p = document.getElementById('detail-panel');
+      const c = document.getElementById('detail-content');
+      const addr = [s.address, s.suburb, s.state, s.postcode].filter(Boolean).join(', ');
+
+      const srcClass = isOsm(s) ? 'src-osm' : 'src-gov';
+      const srcLabel = isOsm(s) ? 'OpenStreetMap' : 'Government';
+      const qClass = qualityClass(s.quality);
+      const qLabel = qualityLabel(s.quality);
+
+      let h = `<div class="detail-name">${esc(s.name||'Unnamed')}</div>`;
+      h += `<div class="detail-badges">`;
+      h += `<span class="svc-tag t-${s.category||'other'}">${CAT[s.category]||'Other'}</span>`;
+      h += `<span class="svc-source ${srcClass}">${srcLabel}</span>`;
+      h += `<span class="detail-quality"><span class="svc-quality ${qClass}"></span>${qLabel}</span>`;
+      h += `</div>`;
+      if (s.description) h += `<div class="detail-desc">${esc(s.description)}</div>`;
+      h += '<div class="detail-grid">';
+      if (addr) h += r('Address', esc(addr));
+      if (s.phone) h += r('Phone', `<a href="tel:${s.phone}">${esc(s.phone)}</a>`);
+      if (s.email) h += r('Email', `<a href="mailto:${s.email}">${esc(s.email)}</a>`);
+      if (s.website) h += r('Web', `<a href="${s.website}" target="_blank">${esc(host(s.website))}</a>`);
+      if (s.hours) h += r('Hours', esc(s.hours));
+      if (s.eligibility) h += r('Eligibility', esc(s.eligibility));
+      if (s.cost) h += r('Cost', esc(s.cost));
+      if (s.source_organisation) h += r('Source', esc(s.source_organisation));
+      h += '</div>';
+      c.innerHTML = h;
+      p.classList.add('visible');
+    }
+
+    function r(l,v){return `<span class="dl">${l}</span><span class="dv">${v}</span>`;}
+    function host(u){try{return new URL(u).hostname}catch{return u}}
+    function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+    function buildSuburbFilter() {
+      const sel = document.getElementById('filter-suburb');
+      const st = document.getElementById('filter-state').value;
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">All suburbs</option>';
+      let pool = allServices;
+      if (st) pool = pool.filter(s => s.state === st);
+      const suburbs = {};
+      pool.forEach(s => { if (s.suburb) suburbs[s.suburb] = (suburbs[s.suburb]||0)+1; });
+      Object.keys(suburbs).sort().forEach(sub => {
+        const o = document.createElement('option');
+        o.value = sub;
+        o.textContent = `${sub} (${suburbs[sub]})`;
+        sel.appendChild(o);
+      });
+      if (prev && suburbs[prev]) sel.value = prev;
+    }
+
+    function applyFilters() {
+      const q = document.getElementById('search').value.toLowerCase().trim();
+      const st = document.getElementById('filter-state').value;
+      const cat = document.getElementById('filter-category').value;
+      const sub = document.getElementById('filter-suburb').value;
+      let f = allServices;
+      if (st) f = f.filter(s => s.state === st);
+      if (activeChips.size > 0) {
+        f = f.filter(s => activeChips.has(s.category));
+      } else if (cat) {
+        f = f.filter(s => s.category === cat);
+      }
+      if (sub) f = f.filter(s => s.suburb === sub);
+      if (q) f = f.filter(s => [s.name,s.description,s.address,s.suburb,s.phone].filter(Boolean).join(' ').toLowerCase().includes(q));
+      filteredServices = f;
+      renderServices(f);
+    }
+
+    let t;
+    document.getElementById('search').addEventListener('input', () => { clearTimeout(t); t = setTimeout(applyFilters, 200); });
+    document.getElementById('filter-state').addEventListener('change', () => { buildSuburbFilter(); applyFilters(); });
+    document.getElementById('filter-category').addEventListener('change', applyFilters);
+    document.getElementById('filter-suburb').addEventListener('change', applyFilters);
+    document.getElementById('clear-filters').addEventListener('click', () => {
+      document.getElementById('search').value='';
+      document.getElementById('filter-state').value='';
+      document.getElementById('filter-category').value='';
+      document.getElementById('filter-suburb').innerHTML='<option value="">All suburbs</option>';
+      activeChips.clear();
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      applyFilters();
+    });
+    document.getElementById('detail-close').addEventListener('click', () => {
+      document.getElementById('detail-panel').classList.remove('visible');
+      clearHighlight();
+    });
+
+    document.getElementById('download-csv').addEventListener('click', () => {
+      if (!filteredServices.length) return;
+      const cols = ['name','category','description','address','suburb','state','postcode','phone','email','website','hours','eligibility','cost','latitude','longitude','quality'];
+      const escape = v => {
+        if (v == null) return '';
+        const s = String(v);
+        if (s.includes(',') || s.includes('"') || s.includes('\n')) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      };
+      let csv = cols.join(',') + '\n';
+      filteredServices.forEach(s => {
+        csv += cols.map(c => escape(s[c])).join(',') + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'oa-sa-services.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    initMap();
+    loadData();
+  </script>
+</body>
+</html>
