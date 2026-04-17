@@ -589,6 +589,49 @@
       animation: pulse-ring 1.2s ease-out infinite;
     }
 
+    /* ===== STREAM PROGRESS BAR ===== */
+    .stream-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 28px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      z-index: 998;
+      display: none;
+      align-items: center;
+      padding: 0 12px;
+    }
+
+    .stream-bar.visible { display: flex; }
+
+    .stream-bar-fill {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      background: rgba(9,105,218,0.06);
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    .stream-bar-text {
+      position: relative;
+      font-size: 11px;
+      color: var(--text-secondary);
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stream-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse-dot 1s ease-in-out infinite;
+    }
+
     /* ===== DOWNLOAD BUTTON ===== */
     .download-btn {
       background: none;
@@ -690,19 +733,16 @@
       <div class="loading-overlay" id="loading">
         <div class="loading-card">
           <div class="loading-title">Loading services</div>
-          <div class="loading-subtitle">Fetching from 27 open data sources across Australia</div>
-          <div class="loading-progress">
-            <div class="loading-progress-bar" id="loading-bar"></div>
-          </div>
-          <div class="loading-stats">
-            <span id="loading-count">0 records</span>
-            <span class="loading-pct" id="loading-pct">0%</span>
-          </div>
+          <div class="loading-subtitle">Connecting to 27 open data sources</div>
           <div class="loading-phase" id="loading-phase">
             <span class="loading-dot"></span>
-            <span id="loading-text">Connecting to database</span>
+            <span id="loading-text">Fetching first results</span>
           </div>
         </div>
+      </div>
+      <div class="stream-bar" id="stream-bar">
+        <div class="stream-bar-fill" id="stream-bar-fill"></div>
+        <span class="stream-bar-text" id="stream-bar-text"></span>
       </div>
       <div class="detail" id="detail-panel">
         <button class="detail-x" id="detail-close">&times;</button>
@@ -784,51 +824,113 @@
       map.addLayer(markers);
     }
 
+    let isStreaming = false;
+
+    function updateStats() {
+      document.getElementById('total-count').textContent = allServices.length.toLocaleString();
+      document.getElementById('state-count').textContent = new Set(allServices.map(s=>s.state).filter(Boolean)).size;
+      const dates = allServices.map(s=>s.source_date).filter(Boolean).sort().reverse();
+      if (dates.length) {
+        const d = new Date(dates[0] + 'T00:00:00');
+        document.getElementById('last-updated').textContent = d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+      }
+    }
+
+    function showStreamBar(count, pct) {
+      const bar = document.getElementById('stream-bar');
+      bar.classList.add('visible');
+      document.getElementById('stream-bar-fill').style.width = pct + '%';
+      document.getElementById('stream-bar-text').innerHTML = `<span class="stream-dot"></span>Loading more services... ${count.toLocaleString()} loaded (${pct}%)`;
+    }
+
+    function hideStreamBar() {
+      const bar = document.getElementById('stream-bar');
+      document.getElementById('stream-bar-fill').style.width = '100%';
+      document.getElementById('stream-bar-text').innerHTML = `All ${allServices.length.toLocaleString()} services loaded`;
+      setTimeout(() => { bar.classList.remove('visible'); }, 2000);
+    }
+
     async function loadData() {
       try {
-        let data = [];
         const estimated = 89600;
         let url = '/services/services.json?_size=1000&_shape=objects';
+        let firstBatch = true;
+
         while (url) {
           const resp = await fetch(url);
           const json = await resp.json();
-          if (json.rows) data.push(...json.rows);
-          const pct = Math.min(100, Math.round((data.length / estimated) * 100));
-          document.getElementById('loading-bar').style.width = pct + '%';
-          document.getElementById('loading-pct').textContent = pct + '%';
-          document.getElementById('loading-count').textContent = data.length.toLocaleString() + ' records';
-          if (pct < 30) {
-            document.getElementById('loading-text').textContent = 'Downloading records';
-          } else if (pct < 90) {
-            document.getElementById('loading-text').textContent = 'Processing ' + (Math.floor(data.length / 1000) * 1000).toLocaleString() + '+ records';
-          } else if (pct < 100) {
-            document.getElementById('loading-text').textContent = 'Almost there';
+          if (json.rows) allServices.push(...json.rows);
+
+          const pct = Math.min(100, Math.round((allServices.length / estimated) * 100));
+
+          if (firstBatch) {
+            // First batch arrived - hide overlay, show the UI immediately
+            document.getElementById('loading').style.display = 'none';
+            buildCatFilter();
+            buildSuburbFilter();
+            document.getElementById('filter-category').value = 'employment';
+            updateStats();
+            applyFilters();
+            firstBatch = false;
+            isStreaming = true;
+
+            if (json.next_url) {
+              showStreamBar(allServices.length, pct);
+            }
           } else {
-            document.getElementById('loading-text').textContent = 'Building map';
+            // Subsequent batches - update stream bar and refresh filters/results
+            showStreamBar(allServices.length, pct);
+            updateStats();
+            rebuildFilters();
+            applyFilters();
           }
+
           if (json.next_url) {
-            url = json.next_url.startsWith('http') ? json.next_url : json.next_url;
+            url = json.next_url;
           } else {
             url = null;
           }
         }
-        allServices = data;
-        document.getElementById('total-count').textContent = allServices.length.toLocaleString();
-        document.getElementById('state-count').textContent = new Set(allServices.map(s=>s.state).filter(Boolean)).size;
-        const dates = allServices.map(s=>s.source_date).filter(Boolean).sort().reverse();
-        if (dates.length) {
-          const d = new Date(dates[0] + 'T00:00:00');
-          document.getElementById('last-updated').textContent = d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-        }
-        buildCatFilter();
-        buildSuburbFilter();
-        document.getElementById('filter-category').value = 'employment';
+
+        // All done
+        isStreaming = false;
+        updateStats();
+        rebuildFilters();
         applyFilters();
-        document.getElementById('loading').style.display = 'none';
+        hideStreamBar();
       } catch(e) {
         console.error(e);
-        document.getElementById('loading').innerHTML = '<div class="loading-card" style="text-align:center"><div class="loading-title" style="color:#dc2626">Failed to load data</div><div class="loading-subtitle">Please try refreshing the page</div></div>';
+        if (!allServices.length) {
+          document.getElementById('loading').innerHTML = '<div class="loading-card" style="text-align:center"><div class="loading-title" style="color:#dc2626">Failed to load data</div><div class="loading-subtitle">Please try refreshing the page</div></div>';
+        } else {
+          // Partial load - hide stream bar, work with what we have
+          isStreaming = false;
+          hideStreamBar();
+        }
       }
+    }
+
+    function rebuildFilters() {
+      // Rebuild category dropdown (preserving selection)
+      const catSel = document.getElementById('filter-category');
+      const prevCat = catSel.value;
+      catSel.innerHTML = '<option value="">All categories</option>';
+      const counts = {};
+      allServices.forEach(s => { counts[s.category] = (counts[s.category]||0)+1; });
+      Object.keys(CAT).forEach(k => {
+        if (!counts[k]) return;
+        const o = document.createElement('option');
+        o.value = k;
+        o.textContent = `${CAT[k]} (${counts[k].toLocaleString()})`;
+        catSel.appendChild(o);
+      });
+      if (prevCat) catSel.value = prevCat;
+      buildCatChips(counts);
+      // Re-activate chips
+      document.querySelectorAll('.cat-chip').forEach(chip => {
+        if (activeChips.has(chip.dataset.cat)) chip.classList.add('active');
+      });
+      buildSuburbFilter();
     }
 
     let activeChips = new Set();
