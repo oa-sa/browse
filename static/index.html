@@ -553,6 +553,11 @@
 
     .detail-quality .svc-quality { width: 8px; height: 8px; }
 
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(2.5); opacity: 0; }
+    }
+
     /* ===== DOWNLOAD BUTTON ===== */
     .download-btn {
       background: none;
@@ -698,15 +703,22 @@
       technology:'#4f46e5', other:'#6b7280'
     };
 
+    function makeDot(color, size) {
+      const el = document.createElement('div');
+      el.style.cssText = `width:${size}px;height:${size}px;background:${color};border:2px solid #fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);`;
+      return el;
+    }
+
     function setHighlight(lat, lng) {
       clearHighlight();
       const coord = new mapkit.Coordinate(lat, lng);
-      highlightAnnotation = new mapkit.MarkerAnnotation(coord, {
-        color: '#0969da',
-        glyphText: '',
-        displayPriority: 1000,
-        animates: true
-      });
+      const factory = (coord, opts) => {
+        const el = document.createElement('div');
+        el.style.cssText = 'width:20px;height:20px;position:relative;';
+        el.innerHTML = '<div style="width:20px;height:20px;border:2px solid #0969da;border-radius:50%;position:absolute;animation:pulse-ring 1.2s ease-out infinite;"></div><div style="width:12px;height:12px;background:#0969da;border:2.5px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.35);position:absolute;top:4px;left:4px;"></div>';
+        return el;
+      };
+      highlightAnnotation = new mapkit.Annotation(coord, factory, { displayPriority: 1000 });
       map.addAnnotation(highlightAnnotation);
     }
 
@@ -859,12 +871,12 @@
         if (s.latitude && s.longitude) {
           const coord = new mapkit.Coordinate(s.latitude, s.longitude);
           const color = CAT_COLOR[s.category] || '#64748b';
-          const ann = new mapkit.MarkerAnnotation(coord, {
-            color: color,
-            glyphText: '',
+          const factory = () => makeDot(color, 10);
+          const ann = new mapkit.Annotation(coord, factory, {
             displayPriority: 500,
             clusteringIdentifier: 'services',
-            title: s.name || 'Unnamed'
+            title: s.name || 'Unnamed',
+            anchorOffset: new DOMPoint(0, 0)
           });
           ann._service = s;
           annotations.push(ann);
