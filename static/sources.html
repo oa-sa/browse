@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sources - Open Australian Services Archive</title>
+  <meta name="description" content="Data sources, licenses and attribution for the Open Australian Services Archive.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f6f8fa;
+      --surface: #ffffff;
+      --surface-2: #f0f2f5;
+      --border: #d8dee4;
+      --text: #1f2328;
+      --text-secondary: #656d76;
+      --text-dim: #8b949e;
+      --accent: #0969da;
+      --green: #1a7f37;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo-mark {
+      background: var(--green);
+      color: var(--bg);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 5px;
+      border-radius: 4px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-link {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .header-link:hover { color: var(--text); background: var(--surface-2); }
+    .header-link.active { color: var(--text); font-weight: 600; }
+
+    .content {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .summary-cards {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .summary-card .value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .summary-card .label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .source-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .source-table th {
+      text-align: left;
+      padding: 10px 12px;
+      background: var(--surface-2);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .source-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .source-table tr:last-child td { border-bottom: none; }
+    .source-table tr:hover td { background: var(--bg); }
+
+    .source-table a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .source-table a:hover { text-decoration: underline; }
+
+    .license-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: #dbeafe;
+      color: #1e40af;
+      white-space: nowrap;
+    }
+
+    .jurisdiction-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: #d1fae5;
+      color: #065f46;
+      white-space: nowrap;
+    }
+
+    .records-count {
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .note {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-top: 24px;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .note a { color: var(--accent); text-decoration: none; }
+    .note a:hover { text-decoration: underline; }
+
+    .osm-note {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    @media(max-width:768px) {
+      .source-table { font-size: 12px; }
+      .source-table th, .source-table td { padding: 8px; }
+      .header-link.desktop { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <a href="/" class="logo">
+        <span class="logo-mark">OA</span>
+        Open Australian Services Archive
+      </a>
+    </div>
+    <div class="header-right">
+      <a href="/" class="header-link">Browse</a>
+      <a href="/static/sources.html" class="header-link active">Sources</a>
+      <a href="/static/oasa-whitepaper.pdf" target="_blank" rel="noopener" class="header-link desktop">White Paper</a>
+      <a href="https://github.com/oa-sa/data" target="_blank" rel="noopener" class="header-link desktop">Data</a>
+      <a href="https://github.com/oa-sa" target="_blank" rel="noopener" class="header-link">GitHub</a>
+    </div>
+  </header>
+
+  <div class="content">
+    <h1>Data Sources</h1>
+    <p class="subtitle">
+      Every record in the Open Australian Services Archive comes from a public, openly licensed data source.
+      This page documents where the data comes from, what license it carries, and how many records each source contributes.
+      Source attribution is also embedded in every individual record.
+    </p>
+
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="value">89,575</div>
+        <div class="label">Total records</div>
+      </div>
+      <div class="summary-card">
+        <div class="value">27</div>
+        <div class="label">Data sources</div>
+      </div>
+      <div class="summary-card">
+        <div class="value">5</div>
+        <div class="label">Government portals</div>
+      </div>
+      <div class="summary-card">
+        <div class="value">CC-BY</div>
+        <div class="label">All data licenses</div>
+      </div>
+    </div>
+
+    <h2>Federal</h2>
+    <table class="source-table">
+      <thead>
+        <tr><th>Dataset</th><th>Organisation</th><th>License</th><th class="records-count">Records</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://data.gov.au/data/dataset/acnc-register" target="_blank">ACNC Registered Charities</a></td>
+          <td>Australian Charities and Not-for-profits Commission</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/au/" target="_blank" class="license-badge">CC-BY-3.0-AU</a></td>
+          <td class="records-count">65,078</td>
+        </tr>
+        <tr>
+          <td><a href="https://data.gov.au/data/dataset/638f89d7-1c12-4db9-8342-abfcd7b49e95" target="_blank">Employment Services Provider Locations</a></td>
+          <td>Department of Employment and Workplace Relations</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/au/" target="_blank" class="license-badge">CC-BY-3.0-AU</a></td>
+          <td class="records-count">5,740</td>
+        </tr>
+        <tr>
+          <td><a href="https://data.gov.au/data/dataset/d667403f-2016-463f-bb0a-3087ae67c57f" target="_blank">Emergency Relief Provider Outlets</a></td>
+          <td>Department of Social Services</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/au/" target="_blank" class="license-badge">CC-BY-3.0-AU</a></td>
+          <td class="records-count">1,187</td>
+        </tr>
+        <tr>
+          <td><a href="https://data.gov.au/data/dataset/judicial-courts" target="_blank">Judicial Courts</a></td>
+          <td>Geoscience Australia</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/au/" target="_blank" class="license-badge">CC-BY-3.0-AU</a></td>
+          <td class="records-count">25</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>South Australia</h2>
+    <table class="source-table">
+      <thead>
+        <tr><th>Dataset</th><th>Organisation</th><th>License</th><th class="records-count">Records</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://data.gov.au/data/dataset/sa-community-directory" target="_blank">SA Community Directory 2021</a></td>
+          <td>SA Community (Connecting Up Inc)</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/au/" target="_blank" class="license-badge">CC-BY-3.0-AU</a></td>
+          <td class="records-count">14,439</td>
+        </tr>
+        <tr>
+          <td><a href="https://data.gov.au/data/dataset/list-of-child-and-family-health-service-centre-locations" target="_blank">Child and Family Health Service Centres</a></td>
+          <td>SA Health</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/au/" target="_blank" class="license-badge">CC-BY-3.0-AU</a></td>
+          <td class="records-count">113</td>
+        </tr>
+        <tr>
+          <td><a href="https://data.sa.gov.au/data/dataset/sa-private-hospitals" target="_blank">SA Private Hospitals</a></td>
+          <td>SA Health</td>
+          <td><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="license-badge">CC-BY-4.0</a></td>
+          <td class="records-count">50</td>
+        </tr>
+        <tr>
+          <td><a href="https://data.sa.gov.au/data/dataset/gp-plus-locations" target="_blank">GP Plus Locations</a></td>
+          <td>SA Health</td>
+          <td><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="license-badge">CC-BY-4.0</a></td>
+          <td class="records-count">8</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Victoria</h2>
+    <table class="source-table">
+      <thead>
+        <tr><th>Dataset</th><th>Organisation</th><th>License</th><th class="records-count">Records</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://data.gov.au/data/dataset/neighbourhood-houses-gfyl" target="_blank">Neighbourhood Houses (GFYL)</a></td>
+          <td>VIC Planning and Community Development</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/au/" target="_blank" class="license-badge">CC-BY-3.0-AU</a></td>
+          <td class="records-count">146</td>
+        </tr>
+        <tr>
+          <td><a href="https://discover.data.vic.gov.au/dataset/free-and-cheap-support-services-with-opening-hours-public-transport-and-parking-options-helping" target="_blank">Free and Cheap Support Services (Helping Out)</a></td>
+          <td>City of Melbourne</td>
+          <td><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="license-badge">CC-BY-4.0</a></td>
+          <td class="records-count">118</td>
+        </tr>
+        <tr>
+          <td><a href="https://discover.data.vic.gov.au/dataset/early-learning-centres" target="_blank">Early Learning Centres</a></td>
+          <td>City of Ballarat</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/au/" target="_blank" class="license-badge">CC-BY-3.0-AU</a></td>
+          <td class="records-count">71</td>
+        </tr>
+        <tr>
+          <td><a href="https://discover.data.vic.gov.au/dataset/family-maternal-child-health-centre-locations" target="_blank">Family Maternal Child Health Centres</a></td>
+          <td>City of Casey</td>
+          <td><span class="license-badge">Other (Open)</span></td>
+          <td class="records-count">40</td>
+        </tr>
+        <tr>
+          <td><a href="https://data.gov.au/data/dataset/ballarat-community-food-activities" target="_blank">Ballarat Community Food Activities</a></td>
+          <td>City of Ballarat</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/au/" target="_blank" class="license-badge">CC-BY-3.0-AU</a></td>
+          <td class="records-count">26</td>
+        </tr>
+        <tr>
+          <td><a href="https://discover.data.vic.gov.au/dataset/emergency-food-relief-groups" target="_blank">Emergency Food Relief Groups</a></td>
+          <td>City of Casey</td>
+          <td><span class="license-badge">Other (Open)</span></td>
+          <td class="records-count">25</td>
+        </tr>
+        <tr>
+          <td><a href="https://data.gov.au/data/dataset/ballarat-community-centres-and-halls" target="_blank">Ballarat Community Centres and Halls</a></td>
+          <td>City of Ballarat</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/au/" target="_blank" class="license-badge">CC-BY-3.0-AU</a></td>
+          <td class="records-count">23</td>
+        </tr>
+        <tr>
+          <td><a href="https://data.gov.au/data/dataset/ballarat-kindergartens" target="_blank">Ballarat Kindergartens</a></td>
+          <td>City of Ballarat</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/au/" target="_blank" class="license-badge">CC-BY-3.0-AU</a></td>
+          <td class="records-count">12</td>
+        </tr>
+        <tr>
+          <td><a href="https://discover.data.vic.gov.au/dataset/libraries-locations" target="_blank">Libraries Locations</a></td>
+          <td>City of Casey</td>
+          <td><span class="license-badge">Other (Open)</span></td>
+          <td class="records-count">7</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Queensland</h2>
+    <table class="source-table">
+      <thead>
+        <tr><th>Dataset</th><th>Organisation</th><th>License</th><th class="records-count">Records</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://www.data.qld.gov.au/dataset/contacts-list-department-of-communities-child-safety-and-disability-services" target="_blank">Contacts List (DCCSDS)</a></td>
+          <td>QLD Families, Seniors, Disability Services and Child Safety</td>
+          <td><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="license-badge">CC-BY-4.0</a></td>
+          <td class="records-count">209</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.data.qld.gov.au/dataset/government-service-counter-locations" target="_blank">Government Service Counter Locations</a></td>
+          <td>QLD Customer Services</td>
+          <td><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="license-badge">CC-BY-4.0</a></td>
+          <td class="records-count">86</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.data.qld.gov.au/dataset/list-of-victim-support-services" target="_blank">Victim Support Services</a></td>
+          <td>QLD Justice</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" class="license-badge">CC-BY-3.0</a></td>
+          <td class="records-count">68</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.data.qld.gov.au/dataset/contact-a-housing-service-centre" target="_blank">Housing Service Centres</a></td>
+          <td>QLD Housing and Public Works</td>
+          <td><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="license-badge">CC-BY-4.0</a></td>
+          <td class="records-count">42</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.data.qld.gov.au/dataset/breastscreen-queensland-service-locations" target="_blank">BreastScreen Queensland</a></td>
+          <td>Queensland Health</td>
+          <td><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="license-badge">CC-BY-4.0</a></td>
+          <td class="records-count">35</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.data.qld.gov.au/dataset/youth-justice-centre-locations" target="_blank">Youth Justice Centre Locations</a></td>
+          <td>QLD Youth Justice</td>
+          <td><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="license-badge">CC-BY-4.0</a></td>
+          <td class="records-count">34</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.data.qld.gov.au/dataset/housing-service-finder" target="_blank">Housing Service Finder</a></td>
+          <td>QLD Housing</td>
+          <td><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="license-badge">CC-BY-4.0</a></td>
+          <td class="records-count">34</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.data.qld.gov.au/dataset/hepatitis-c-testing-and-treatment-centres" target="_blank">Hepatitis C Testing and Treatment Centres</a></td>
+          <td>Queensland Health</td>
+          <td><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="license-badge">CC-BY-4.0</a></td>
+          <td class="records-count">9</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.data.qld.gov.au/dataset/dispute-resolution-centres" target="_blank">Dispute Resolution Centres</a></td>
+          <td>QLD Justice</td>
+          <td><a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" class="license-badge">CC-BY-3.0</a></td>
+          <td class="records-count">6</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Tasmania</h2>
+    <table class="source-table">
+      <thead>
+        <tr><th>Dataset</th><th>Organisation</th><th>License</th><th class="records-count">Records</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://data.gov.au/data/dataset/service-tasmania-shop-locations" target="_blank">Service Tasmania Shop Locations</a></td>
+          <td>Department of Premier and Cabinet (Tasmania)</td>
+          <td><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" class="license-badge">CC-BY-4.0</a></td>
+          <td class="records-count">27</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>OpenStreetMap</h2>
+    <table class="source-table">
+      <thead>
+        <tr><th>Dataset</th><th>Organisation</th><th>License</th><th class="records-count">Records</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://www.openstreetmap.org" target="_blank">Social Facilities (Australia)</a></td>
+          <td>OpenStreetMap contributors</td>
+          <td><a href="https://opendatacommons.org/licenses/odbl/" target="_blank" class="license-badge">ODbL</a></td>
+          <td class="records-count">1,929</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="osm-note">Extracted via Geofabrik Australia extract, filtered for amenity=social_facility tags.</p>
+
+    <div class="note">
+      <strong>How we handle attribution</strong><br><br>
+      Every record in the dataset carries its source metadata: source name, organisation, license, and a link back to the original dataset.
+      This means attribution travels with the data, even when records are downloaded, filtered, or redistributed.<br><br>
+      The pipeline code is released under <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">CC0 1.0</a> (public domain).
+      The data retains the license of its original source (CC-BY or ODbL).<br><br>
+      For the full research documentation, see the <a href="https://github.com/oa-sa/landscape" target="_blank">landscape repository</a>.
+    </div>
+  </div>
+
+</body>
+</html>
