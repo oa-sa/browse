@@ -832,7 +832,15 @@
       const dates = allServices.map(s=>s.source_date).filter(Boolean).sort().reverse();
       if (dates.length) {
         const d = new Date(dates[0] + 'T00:00:00');
-        document.getElementById('last-updated').textContent = d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+        const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+        let label;
+        if (days <= 0) label = 'today';
+        else if (days === 1) label = 'yesterday';
+        else if (days < 30) label = days + ' days ago';
+        else label = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+        const el = document.getElementById('last-updated');
+        el.textContent = label;
+        el.title = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
       }
     }
 
