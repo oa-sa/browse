@@ -651,10 +651,87 @@
     .leaflet-popup-content-wrapper{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;}
     .leaflet-popup-tip{background:var(--surface);}
 
+    /* ===== MOBILE TABS ===== */
+    .mobile-tabs {
+      display: none;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .mobile-tab {
+      flex: 1;
+      padding: 10px 12px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+    }
+
+    .mobile-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
     @media(max-width:768px){
-      .sidebar{display:none;}
-      .header-stats{display:none;}
-      .header-link.desktop{display:none;}
+      header { padding: 0 12px; }
+      .logo { font-size: 13px; }
+      .header-stats { display: none; }
+      .header-link.desktop { display: none; }
+      .header-link { padding: 4px 6px; font-size: 12px; }
+      .header-left { gap: 8px; }
+      .header-right { gap: 4px; }
+      .header-sep { display: none; }
+
+      .mobile-tabs { display: flex; }
+
+      .main { position: relative; }
+
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        position: absolute;
+        inset: 0;
+        z-index: 500;
+      }
+
+      .map-area {
+        position: absolute;
+        inset: 0;
+      }
+
+      body[data-mobile-view="list"] .map-area { display: none; }
+      body[data-mobile-view="map"] .sidebar { display: none; }
+
+      .detail {
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        width: auto;
+        max-width: none;
+        max-height: 55vh;
+        overflow-y: auto;
+        padding: 14px;
+      }
+
+      .cat-chips {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        max-height: 28vh;
+        overflow-y: auto;
+      }
+
+      .leaflet-top.leaflet-left { top: 8px; }
+
+      .sidebar-header { padding: 12px 12px 8px; }
+      .controls { padding: 10px 12px; }
+      .results-bar { padding: 8px 12px; }
     }
   </style>
 </head>
@@ -681,6 +758,11 @@
       <a href="https://github.com/oa-sa" target="_blank" rel="noopener" class="header-link">GitHub</a>
     </div>
   </header>
+
+  <div class="mobile-tabs" id="mobile-tabs">
+    <button class="mobile-tab active" data-view="list" type="button">List</button>
+    <button class="mobile-tab" data-view="map" type="button">Map</button>
+  </div>
 
   <div class="main">
     <div class="sidebar">
@@ -1172,6 +1254,30 @@
       a.download = 'oa-sa-services.csv';
       a.click();
       URL.revokeObjectURL(a.href);
+    });
+
+    function isMobile() { return window.matchMedia('(max-width: 768px)').matches; }
+
+    function setMobileView(view) {
+      document.body.dataset.mobileView = view;
+      document.querySelectorAll('.mobile-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.view === view);
+      });
+      if (view === 'map' && map) {
+        setTimeout(() => map.invalidateSize(), 50);
+      }
+    }
+
+    document.querySelectorAll('.mobile-tab').forEach(btn => {
+      btn.addEventListener('click', () => setMobileView(btn.dataset.view));
+    });
+    setMobileView('list');
+
+    // When a service card is tapped on mobile, switch to map so the pin is visible
+    document.getElementById('results-list').addEventListener('click', (e) => {
+      if (isMobile() && e.target.closest('.service-card')) {
+        setMobileView('map');
+      }
     });
 
     initMap();
