@@ -1,0 +1,43 @@
+name: Sync Dataset From Data Repo
+
+on:
+  schedule:
+    # Hourly — catches updates from the data repo within an hour
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Pull latest services.db
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download latest services.db from data repo
+        run: |
+          curl -fL -o services.db.new \
+            https://raw.githubusercontent.com/oa-sa/data/main/combined/services.db
+
+      - name: Replace if changed
+        id: diff
+        run: |
+          if [ ! -f services.db ] || ! cmp -s services.db services.db.new; then
+            mv services.db.new services.db
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            rm services.db.new
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "oa-sa-bot"
+          git config user.email "bot@oa-sa.org"
+          git add services.db
+          DATE=$(date -u +%Y-%m-%d)
+          git commit -m "Sync services.db from data repo (${DATE})"
+          git push
