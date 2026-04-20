@@ -309,6 +309,29 @@
     .src-gov { background: #dbeafe; color: #1e40af; }
     .src-osm { background: #d1fae5; color: #065f46; }
 
+    .svc-approx {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px dashed #d97706;
+    }
+
+    .detail-approx-note {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #92400e;
+      line-height: 1.4;
+    }
+
     .no-results {
       padding: 32px 12px;
       text-align: center;
@@ -875,8 +898,16 @@
       technology:'#4f46e5', other:'#6b7280'
     };
 
-    function markerIcon(cat) {
+    function markerIcon(cat, precision) {
       const c = CAT_COLOR[cat] || '#64748b';
+      if (precision === 'postcode') {
+        // Hollow dashed ring = suburb-level approximation (postcode centroid)
+        return L.divIcon({
+          className: '',
+          html: `<div style="width:14px;height:14px;border:2px dashed ${c};background:rgba(255,255,255,0.85);border-radius:50%;box-sizing:border-box;"></div>`,
+          iconSize: [14, 14], iconAnchor: [7, 7]
+        });
+      }
       return L.divIcon({
         className: '',
         html: `<div style="width:10px;height:10px;background:${c};border:2px solid #fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>`,
@@ -1100,7 +1131,7 @@
 
       services.forEach(s => {
         if (s.latitude && s.longitude) {
-          const m = L.marker([s.latitude, s.longitude], { icon: markerIcon(s.category) });
+          const m = L.marker([s.latitude, s.longitude], { icon: markerIcon(s.category, s.location_precision) });
           m.on('click', () => {
             setHighlight(s.latitude, s.longitude);
             showDetail(s);
@@ -1118,11 +1149,15 @@
         const srcClass = isOsm(s) ? 'src-osm' : 'src-gov';
         const srcLabel = isOsm(s) ? 'OSM' : 'GOV';
         const qClass = qualityClass(s.quality);
+        const approxBadge = s.location_precision === 'postcode'
+          ? `<span class="svc-approx" title="Pin shows postcode centroid, not the exact address">~approx</span>`
+          : '';
         d.innerHTML = `
           <div class="svc-name">${esc(s.name||'Unnamed')}</div>
           <div class="svc-row">
             <span class="svc-tag t-${s.category||'other'}">${CAT[s.category]||'Other'}</span>
             <span class="svc-source ${srcClass}">${srcLabel}</span>
+            ${approxBadge}
             <span class="svc-quality ${qClass}" title="${qualityLabel(s.quality)}"></span>
             <span class="svc-meta">${esc(loc)}</span>
           </div>
@@ -1160,7 +1195,13 @@
       h += `<span class="svc-tag t-${s.category||'other'}">${CAT[s.category]||'Other'}</span>`;
       h += `<span class="svc-source ${srcClass}">${srcLabel}</span>`;
       h += `<span class="detail-quality"><span class="svc-quality ${qClass}"></span>${qLabel}</span>`;
+      if (s.location_precision === 'postcode') {
+        h += `<span class="svc-approx" title="Pin shows postcode centroid, not the exact address">~approx</span>`;
+      }
       h += `</div>`;
+      if (s.location_precision === 'postcode') {
+        h += `<div class="detail-approx-note">Approximate location — the pin is the postcode centroid, not a verified street address. Use the address above for directions.</div>`;
+      }
       if (s.description) h += `<div class="detail-desc">${esc(s.description)}</div>`;
       h += '<div class="detail-grid">';
       if (addr) h += r('Address', esc(addr));
