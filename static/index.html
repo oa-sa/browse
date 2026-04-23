@@ -370,6 +370,25 @@
       margin-top: 2px;
     }
 
+    .svc-desc {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      margin-top: 3px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .svc-desc mark,
+    .detail-desc mark {
+      background: #fef08a;
+      color: inherit;
+      padding: 0 1px;
+      border-radius: 2px;
+    }
+
     .svc-row {
       display: flex;
       align-items: center;
@@ -1395,6 +1414,7 @@
         }
       });
 
+      const query = document.getElementById('search').value.trim();
       const limit = 400;
       const frag = document.createDocumentFragment();
       services.slice(0, limit).forEach(s => {
@@ -1414,8 +1434,11 @@
         const vintageBadge = vintage
           ? `<span class="svc-vintage ${vintageClass(vintage.year)}" title="Source data published ${vintage.label} (${ageYears(vintage.year)} years ago). Verify before referring.">${vintage.label}</span>`
           : '';
+        const descHtml = descSnippet(s.description, query);
+        const descLine = descHtml ? `<div class="svc-desc">${descHtml}</div>` : '';
         d.innerHTML = `
           <div class="svc-name">${esc(s.name||'Unnamed')}</div>
+          ${descLine}
           <div class="svc-row">
             <span class="svc-tag t-${s.category||'other'}">${CAT[s.category]||'Other'}</span>
             <span class="svc-source ${srcClass}">${srcLabel}</span>
@@ -1474,7 +1497,10 @@
       if (vintage && ageYears(vintage.year) >= 5) {
         h += `<div class="detail-vintage-note">Source data is ${ageYears(vintage.year)} years old (${vintage.label}). Phone numbers, addresses and opening hours may no longer be correct — verify before referring someone.</div>`;
       }
-      if (s.description) h += `<div class="detail-desc">${esc(s.description)}</div>`;
+      if (s.description) {
+        const q = document.getElementById('search').value.trim();
+        h += `<div class="detail-desc">${highlightAll(s.description, q)}</div>`;
+      }
       h += '<div class="detail-grid">';
       if (addr) h += r('Address', esc(addr));
       if (s.phone) h += r('Phone', `<a href="tel:${s.phone}">${esc(s.phone)}</a>`);
@@ -1493,6 +1519,44 @@
     function r(l,v){return `<span class="dl">${l}</span><span class="dv">${v}</span>`;}
     function host(u){try{return new URL(u).hostname}catch{return u}}
     function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+    function escapeRegex(s){return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');}
+
+    // Build a highlighted description snippet for the list view. When a search
+    // query is present and matched inside the description, the snippet centres
+    // on the first match so the highlight is always visible within the 2-line
+    // clamp; otherwise it shows the start of the description.
+    function descSnippet(desc, query, maxLen = 160) {
+      if (!desc) return '';
+      let text;
+      if (query) {
+        const idx = desc.toLowerCase().indexOf(query.toLowerCase());
+        if (idx >= 0) {
+          const before = 40;
+          const start = Math.max(0, idx - before);
+          const end = Math.min(desc.length, start + maxLen);
+          text = desc.slice(start, end).trim();
+          if (start > 0) text = '…' + text;
+          if (end < desc.length) text = text + '…';
+        } else {
+          text = desc.length > maxLen ? desc.slice(0, maxLen).trim() + '…' : desc;
+        }
+      } else {
+        text = desc.length > maxLen ? desc.slice(0, maxLen).trim() + '…' : desc;
+      }
+      let safe = esc(text);
+      if (query) {
+        safe = safe.replace(new RegExp('(' + escapeRegex(query) + ')', 'gi'), '<mark>$1</mark>');
+      }
+      return safe;
+    }
+
+    // Highlight matches inside an already-escaped or plain text block without
+    // trimming it — used by the detail panel where the full description shows.
+    function highlightAll(text, query) {
+      const safe = esc(text);
+      if (!query) return safe;
+      return safe.replace(new RegExp('(' + escapeRegex(query) + ')', 'gi'), '<mark>$1</mark>');
+    }
 
     function buildSuburbFilter() {
       const sel = document.getElementById('filter-suburb');
