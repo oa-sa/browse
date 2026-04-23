@@ -210,6 +210,99 @@
 
     .filter-select:focus { border-color: var(--accent); }
 
+    /* ===== NEAR ME BUTTON ===== */
+    .near-me-btn {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+    }
+
+    .near-me-btn:not(.active):hover {
+      background: var(--surface-2);
+      border-color: var(--accent);
+    }
+
+    .near-me-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      justify-content: space-between;
+    }
+
+    .near-me-btn.active .near-me-clear { display: inline-flex; }
+
+    .near-me-btn.loading { cursor: wait; opacity: 0.75; }
+
+    .near-me-clear {
+      display: none;
+      background: rgba(255,255,255,0.22);
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      width: 18px;
+      height: 18px;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      padding: 0;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .near-me-clear:hover { background: rgba(255,255,255,0.35); }
+
+    .near-me-error {
+      font-size: 11px;
+      color: #b91c1c;
+      padding: 4px 2px 0;
+      line-height: 1.35;
+    }
+
+    .svc-distance {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-left: auto;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* User location marker */
+    .user-loc-marker { position: relative; width: 18px; height: 18px; }
+    .user-loc-marker-dot {
+      width: 14px; height: 14px;
+      background: var(--accent);
+      border: 2.5px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      position: absolute;
+      top: 2px; left: 2px;
+    }
+    .user-loc-marker-ring {
+      width: 18px; height: 18px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      position: absolute;
+      top: 0; left: 0;
+      animation: pulse-ring 1.4s ease-out infinite;
+      opacity: 0.6;
+    }
+
     .results-bar {
       padding: 8px 14px;
       border-bottom: 1px solid var(--border);
@@ -802,6 +895,11 @@
         </div>
         <div class="filter-group">
           <span class="filter-label">Location</span>
+          <button type="button" class="near-me-btn" id="near-me-btn" aria-pressed="false">
+            <span id="near-me-label">&#x1F4CD; Near me</span>
+            <span class="near-me-clear" id="near-me-clear" title="Clear location" aria-label="Clear location">&times;</span>
+          </button>
+          <div class="near-me-error" id="near-me-error" style="display:none;"></div>
           <div class="filter-row">
             <select class="filter-select" id="filter-state">
               <option value="">All states</option>
@@ -863,6 +961,107 @@
     let filteredServices = [];
     let map, markers;
     let highlightMarker = null;
+    let userLocation = null;
+    let userLocationMarker = null;
+
+    // Haversine distance in metres between two lat/lng points.
+    function distanceMetres(lat1, lng1, lat2, lng2) {
+      const R = 6371000;
+      const toRad = x => x * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLng = toRad(lng2 - lng1);
+      const a = Math.sin(dLat/2) ** 2 +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2) ** 2;
+      return 2 * R * Math.asin(Math.sqrt(a));
+    }
+
+    function formatDistance(m) {
+      if (!isFinite(m)) return '';
+      if (m < 950) return Math.round(m / 10) * 10 + ' m';
+      const km = m / 1000;
+      if (km < 10) return km.toFixed(1) + ' km';
+      if (km < 100) return Math.round(km) + ' km';
+      if (km < 1000) return Math.round(km / 10) * 10 + ' km';
+      return Math.round(km / 100) * 100 + ' km';
+    }
+
+    function userLocationIcon() {
+      return L.divIcon({
+        className: '',
+        html: `<div class="user-loc-marker"><div class="user-loc-marker-ring"></div><div class="user-loc-marker-dot"></div></div>`,
+        iconSize: [18, 18], iconAnchor: [9, 9]
+      });
+    }
+
+    function requestUserLocation() {
+      const btn = document.getElementById('near-me-btn');
+      const label = document.getElementById('near-me-label');
+      const err = document.getElementById('near-me-error');
+      err.style.display = 'none';
+
+      if (!navigator.geolocation) {
+        err.textContent = 'Location is not supported by your browser.';
+        err.style.display = 'block';
+        return;
+      }
+
+      btn.classList.add('loading');
+      label.innerHTML = '&#x1F4CD; Finding you…';
+
+      navigator.geolocation.getCurrentPosition(
+        pos => setUserLocation(pos.coords.latitude, pos.coords.longitude),
+        error => {
+          btn.classList.remove('loading');
+          label.innerHTML = '&#x1F4CD; Near me';
+          let msg = 'Could not get your location.';
+          if (error.code === error.PERMISSION_DENIED) {
+            msg = 'Location permission denied. Enable it in your browser and try again.';
+          } else if (error.code === error.TIMEOUT) {
+            msg = 'Location request timed out. Try again.';
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            msg = 'Location is unavailable right now.';
+          }
+          err.textContent = msg;
+          err.style.display = 'block';
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    }
+
+    function setUserLocation(lat, lng) {
+      userLocation = { lat, lng };
+      const btn = document.getElementById('near-me-btn');
+      const label = document.getElementById('near-me-label');
+      btn.classList.remove('loading');
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      label.innerHTML = '&#x1F4CD; Near your location';
+      document.getElementById('near-me-error').style.display = 'none';
+
+      // Clear state/suburb so the distance sort isn't silently constrained
+      // by a default state choice (e.g. NSW) when the user is elsewhere.
+      document.getElementById('filter-state').value = '';
+      document.getElementById('filter-suburb').value = '';
+      buildSuburbFilter();
+
+      if (userLocationMarker) { map.removeLayer(userLocationMarker); }
+      userLocationMarker = L.marker([lat, lng], { icon: userLocationIcon(), zIndexOffset: 2000, interactive: false });
+      userLocationMarker.addTo(map);
+      map.setView([lat, lng], 11);
+
+      applyFilters();
+    }
+
+    function clearUserLocation() {
+      userLocation = null;
+      const btn = document.getElementById('near-me-btn');
+      btn.classList.remove('active', 'loading');
+      btn.setAttribute('aria-pressed', 'false');
+      document.getElementById('near-me-label').innerHTML = '&#x1F4CD; Near me';
+      document.getElementById('near-me-error').style.display = 'none';
+      if (userLocationMarker) { map.removeLayer(userLocationMarker); userLocationMarker = null; }
+      applyFilters();
+    }
 
     function highlightIcon() {
       return L.divIcon({
@@ -1152,6 +1351,9 @@
         const approxBadge = s.location_precision === 'postcode'
           ? `<span class="svc-approx" title="Pin shows postcode centroid, not the exact address">~approx</span>`
           : '';
+        const distBadge = (userLocation && isFinite(s._distance))
+          ? `<span class="svc-distance" title="Distance from your location">${formatDistance(s._distance)}</span>`
+          : '';
         d.innerHTML = `
           <div class="svc-name">${esc(s.name||'Unnamed')}</div>
           <div class="svc-row">
@@ -1160,6 +1362,7 @@
             ${approxBadge}
             <span class="svc-quality ${qClass}" title="${qualityLabel(s.quality)}"></span>
             <span class="svc-meta">${esc(loc)}</span>
+            ${distBadge}
           </div>
         `;
         d.onclick = () => {
@@ -1253,6 +1456,18 @@
       }
       if (sub) f = f.filter(s => s.suburb === sub);
       if (q) f = f.filter(s => [s.name,s.description,s.address,s.suburb,s.phone].filter(Boolean).join(' ').toLowerCase().includes(q));
+
+      // Sort by distance when Near me is active; records without
+      // coordinates sort to the end.
+      if (userLocation) {
+        f.forEach(s => {
+          s._distance = (s.latitude && s.longitude)
+            ? distanceMetres(userLocation.lat, userLocation.lng, s.latitude, s.longitude)
+            : Infinity;
+        });
+        f.sort((a, b) => a._distance - b._distance);
+      }
+
       filteredServices = f;
       renderServices(f);
     }
@@ -1269,7 +1484,21 @@
       document.getElementById('filter-suburb').innerHTML='<option value="">All suburbs</option>';
       activeChips.clear();
       document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
-      applyFilters();
+      // clearUserLocation calls applyFilters internally
+      clearUserLocation();
+    });
+
+    document.getElementById('near-me-btn').addEventListener('click', (e) => {
+      // Clicking the × inside the active button clears; elsewhere toggles.
+      if (e.target.closest('.near-me-clear')) {
+        clearUserLocation();
+        return;
+      }
+      if (userLocation) {
+        clearUserLocation();
+      } else {
+        requestUserLocation();
+      }
     });
     document.getElementById('detail-close').addEventListener('click', () => {
       document.getElementById('detail-panel').classList.remove('visible');
