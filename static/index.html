@@ -414,6 +414,26 @@
       border: 1px dashed #d97706;
     }
 
+    .svc-vintage {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.03em;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .v-recent { background: var(--surface-2); color: var(--text-secondary); }
+    .v-old    { background: #fef3c7; color: #92400e; }
+    .v-stale  { background: #fee2e2; color: #b91c1c; }
+
+    .vintage-age {
+      font-weight: 400;
+      color: var(--text-dim);
+      margin-left: 4px;
+    }
+
     .detail-approx-note {
       margin-top: 8px;
       padding: 8px 10px;
@@ -422,6 +442,17 @@
       border-radius: 6px;
       font-size: 11px;
       color: #92400e;
+      line-height: 1.4;
+    }
+
+    .detail-vintage-note {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #991b1b;
       line-height: 1.4;
     }
 
@@ -864,7 +895,7 @@
         <span><strong id="total-count">--</strong> services</span>
         <span><strong>27</strong> sources</span>
         <span><strong id="state-count">--</strong> states</span>
-        <span>updated <strong id="last-updated">--</strong></span>
+        <span>refreshed <strong id="last-updated">--</strong></span>
       </div>
     </div>
     <div class="header-right">
@@ -1089,6 +1120,30 @@
       technology:'Technology', other:'Other'
     };
 
+    // Source data vintage, keyed by source_id. A value is set only when the
+    // publication date can be cited from the source URL or filename. Live-API
+    // and undated-static sources are intentionally absent — silence is more
+    // honest than a guess. Format: { label: display string, year: integer }.
+    const SOURCE_VINTAGE = {
+      fed_emergency_relief:     { label: 'Oct 2016', year: 2016 },
+      fed_employment_services:  { label: 'May 2016', year: 2016 },
+      sa_community_directory:   { label: '2021',     year: 2021 },
+      qld_breastscreen:         { label: 'Jul 2023', year: 2023 },
+      sa_child_family_health:   { label: '2015',     year: 2015 },
+      vic_neighbourhood_houses: { label: 'May 2013', year: 2013 },
+    };
+
+    function ageYears(year) {
+      return new Date().getFullYear() - year;
+    }
+
+    function vintageClass(year) {
+      const age = ageYears(year);
+      if (age >= 5) return 'v-stale';
+      if (age >= 2) return 'v-old';
+      return 'v-recent';
+    }
+
     const CAT_COLOR = {
       food:'#16a34a', housing:'#d97706', health:'#2563eb', mental_health:'#7c3aed',
       legal:'#ea580c', employment:'#059669', education:'#0891b2', disability:'#c026d3',
@@ -1152,7 +1207,8 @@
         else label = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
         const el = document.getElementById('last-updated');
         el.textContent = label;
-        el.title = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+        const fullDate = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+        el.title = `Pipeline last refreshed on ${fullDate}. This is the rebuild date — individual sources may be older; each record shows its own vintage.`;
       }
     }
 
@@ -1354,11 +1410,16 @@
         const distBadge = (userLocation && isFinite(s._distance))
           ? `<span class="svc-distance" title="Distance from your location">${formatDistance(s._distance)}</span>`
           : '';
+        const vintage = SOURCE_VINTAGE[s.source_id];
+        const vintageBadge = vintage
+          ? `<span class="svc-vintage ${vintageClass(vintage.year)}" title="Source data published ${vintage.label} (${ageYears(vintage.year)} years ago). Verify before referring.">${vintage.label}</span>`
+          : '';
         d.innerHTML = `
           <div class="svc-name">${esc(s.name||'Unnamed')}</div>
           <div class="svc-row">
             <span class="svc-tag t-${s.category||'other'}">${CAT[s.category]||'Other'}</span>
             <span class="svc-source ${srcClass}">${srcLabel}</span>
+            ${vintageBadge}
             ${approxBadge}
             <span class="svc-quality ${qClass}" title="${qualityLabel(s.quality)}"></span>
             <span class="svc-meta">${esc(loc)}</span>
@@ -1393,10 +1454,15 @@
       const qClass = qualityClass(s.quality);
       const qLabel = qualityLabel(s.quality);
 
+      const vintage = SOURCE_VINTAGE[s.source_id];
+
       let h = `<div class="detail-name">${esc(s.name||'Unnamed')}</div>`;
       h += `<div class="detail-badges">`;
       h += `<span class="svc-tag t-${s.category||'other'}">${CAT[s.category]||'Other'}</span>`;
       h += `<span class="svc-source ${srcClass}">${srcLabel}</span>`;
+      if (vintage) {
+        h += `<span class="svc-vintage ${vintageClass(vintage.year)}">${vintage.label}</span>`;
+      }
       h += `<span class="detail-quality"><span class="svc-quality ${qClass}"></span>${qLabel}</span>`;
       if (s.location_precision === 'postcode') {
         h += `<span class="svc-approx" title="Pin shows postcode centroid, not the exact address">~approx</span>`;
@@ -1404,6 +1470,9 @@
       h += `</div>`;
       if (s.location_precision === 'postcode') {
         h += `<div class="detail-approx-note">Approximate location — the pin is the postcode centroid, not a verified street address. Use the address above for directions.</div>`;
+      }
+      if (vintage && ageYears(vintage.year) >= 5) {
+        h += `<div class="detail-vintage-note">Source data is ${ageYears(vintage.year)} years old (${vintage.label}). Phone numbers, addresses and opening hours may no longer be correct — verify before referring someone.</div>`;
       }
       if (s.description) h += `<div class="detail-desc">${esc(s.description)}</div>`;
       h += '<div class="detail-grid">';
@@ -1415,6 +1484,7 @@
       if (s.eligibility) h += r('Eligibility', esc(s.eligibility));
       if (s.cost) h += r('Cost', esc(s.cost));
       if (s.source_organisation) h += r('Source', esc(s.source_organisation));
+      if (vintage) h += r('Vintage', `${vintage.label} <span class="vintage-age">(${ageYears(vintage.year)} years ago)</span>`);
       h += '</div>';
       c.innerHTML = h;
       p.classList.add('visible');
