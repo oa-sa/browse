@@ -251,8 +251,9 @@
     <h1>Data Sources</h1>
     <p class="subtitle">
       Every record in the Open Australian Services Archive comes from a public, openly licensed data source.
-      This page documents where the data comes from, what license it carries, and how many records each source contributes.
-      Source attribution is also embedded in every individual record.
+      The sections below group data <em>sources</em> by the government portal that publishes them &mdash; which is a different question from where the <em>services</em> are physically located.
+      NSW, WA, NT and ACT don't run their own open-data portals for support services, but services located in those states <em>are</em> in the dataset, supplied by federally-published datasets that list service locations nationally.
+      Source attribution is embedded in every individual record.
     </p>
 
     <div class="summary-cards">
@@ -273,6 +274,64 @@
         <div class="label">All data licenses</div>
       </div>
     </div>
+
+    <h2>Coverage by state (where services are located)</h2>
+    <table class="source-table">
+      <thead>
+        <tr><th>State / Territory</th><th class="records-count">Records</th><th>Origin of this state's coverage</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>South Australia</td>
+          <td class="records-count">14,707</td>
+          <td>SA Community Directory, SA Health datasets, and federal sources</td>
+        </tr>
+        <tr>
+          <td>Queensland</td>
+          <td class="records-count">2,600</td>
+          <td>data.qld.gov.au (9 datasets) plus federal sources</td>
+        </tr>
+        <tr>
+          <td>New South Wales</td>
+          <td class="records-count">2,576</td>
+          <td>Federal sources only &mdash; no NSW open-data portal publishes support-services datasets yet</td>
+        </tr>
+        <tr>
+          <td>Victoria</td>
+          <td class="records-count">2,450</td>
+          <td>Ballarat, Casey, Melbourne council datasets, plus federal sources</td>
+        </tr>
+        <tr>
+          <td>Western Australia</td>
+          <td class="records-count">780</td>
+          <td>Federal sources only &mdash; no WA support-services datasets in the pipeline</td>
+        </tr>
+        <tr>
+          <td>Tasmania</td>
+          <td class="records-count">336</td>
+          <td>Service Tasmania shop locations plus federal sources</td>
+        </tr>
+        <tr>
+          <td>Northern Territory</td>
+          <td class="records-count">209</td>
+          <td>Federal sources only</td>
+        </tr>
+        <tr>
+          <td>Australian Capital Territory</td>
+          <td class="records-count">93</td>
+          <td>Federal sources only</td>
+        </tr>
+        <tr>
+          <td>(state not resolved)</td>
+          <td class="records-count">746</td>
+          <td>Records whose state could not be derived from address or postcode</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="osm-note">
+      Records are counted by the state of the service location, which is how the Browse page's state filter works.
+      The source breakdowns below are grouped by publishing portal, so they add up to the same 24,497 by a different axis.
+    </p>
 
     <h2>Federal</h2>
     <table class="source-table">
