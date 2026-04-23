@@ -196,7 +196,8 @@
     }
 
     .filter-select {
-      flex: 1;
+      flex: 1 1 0;
+      min-width: 0; /* prevent long option text from stretching the select past its flex share */
       padding: 8px 10px;
       background: var(--bg);
       border: 1px solid var(--border);
@@ -272,6 +273,8 @@
       padding: 4px 2px 0;
       line-height: 1.35;
     }
+
+    .near-me-error.warn { color: #92400e; }
 
     .svc-distance {
       font-size: 11px;
@@ -1059,7 +1062,7 @@
       label.innerHTML = '&#x1F4CD; Finding you…';
 
       navigator.geolocation.getCurrentPosition(
-        pos => setUserLocation(pos.coords.latitude, pos.coords.longitude),
+        pos => setUserLocation(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy),
         error => {
           btn.classList.remove('loading');
           label.innerHTML = '&#x1F4CD; Near me';
@@ -1071,22 +1074,23 @@
           } else if (error.code === error.POSITION_UNAVAILABLE) {
             msg = 'Location is unavailable right now.';
           }
+          err.className = 'near-me-error';
           err.textContent = msg;
           err.style.display = 'block';
         },
-        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 }
       );
     }
 
-    function setUserLocation(lat, lng) {
-      userLocation = { lat, lng };
+    function setUserLocation(lat, lng, accuracy) {
+      userLocation = { lat, lng, accuracy };
       const btn = document.getElementById('near-me-btn');
       const label = document.getElementById('near-me-label');
+      const err = document.getElementById('near-me-error');
       btn.classList.remove('loading');
       btn.classList.add('active');
       btn.setAttribute('aria-pressed', 'true');
       label.innerHTML = '&#x1F4CD; Near your location';
-      document.getElementById('near-me-error').style.display = 'none';
 
       // Clear state/suburb so the distance sort isn't silently constrained
       // by a default state choice (e.g. NSW) when the user is elsewhere.
@@ -1094,10 +1098,39 @@
       document.getElementById('filter-suburb').value = '';
       buildSuburbFilter();
 
+      // Warn when accuracy is poor (typically IP-based fallback). Browsers
+      // return accuracy as a 95%-confidence radius in metres; >2 km means
+      // the pin is not where the user actually is.
+      if (accuracy && accuracy > 2000) {
+        const km = accuracy >= 10000 ? Math.round(accuracy/1000) : (accuracy/1000).toFixed(1);
+        err.className = 'near-me-error warn';
+        err.textContent = `Your location is approximate (±${km} km). For precise results, enable precise location in your browser or use a phone with GPS.`;
+        err.style.display = 'block';
+      } else {
+        err.style.display = 'none';
+      }
+
       if (userLocationMarker) { map.removeLayer(userLocationMarker); }
-      userLocationMarker = L.marker([lat, lng], { icon: userLocationIcon(), zIndexOffset: 2000, interactive: false });
-      userLocationMarker.addTo(map);
-      map.setView([lat, lng], 11);
+      const layer = L.layerGroup();
+      // Faint circle shows the accuracy radius so users can see how uncertain
+      // the fix is — a 5 km circle around a pin is far more honest than a dot.
+      if (accuracy && accuracy > 50) {
+        L.circle([lat, lng], {
+          radius: accuracy,
+          color: '#0969da',
+          weight: 1,
+          opacity: 0.35,
+          fillColor: '#0969da',
+          fillOpacity: 0.08,
+          interactive: false
+        }).addTo(layer);
+      }
+      L.marker([lat, lng], { icon: userLocationIcon(), zIndexOffset: 2000, interactive: false }).addTo(layer);
+      layer.addTo(map);
+      userLocationMarker = layer;
+
+      const zoom = accuracy > 5000 ? 9 : accuracy > 1000 ? 11 : 13;
+      map.setView([lat, lng], zoom);
 
       applyFilters();
     }
