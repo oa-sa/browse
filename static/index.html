@@ -347,6 +347,14 @@
     }
 
     .service-card:hover { background: var(--surface-2); }
+    .service-card.active { background: #eff6ff; box-shadow: inset 3px 0 0 var(--accent); }
+
+    .svc-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      justify-content: space-between;
+    }
 
     .svc-name {
       font-size: 13px;
@@ -354,6 +362,35 @@
       color: var(--text);
       margin-bottom: 3px;
       line-height: 1.3;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .svc-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .svc-action {
+      min-width: 28px;
+      height: 24px;
+      padding: 0 7px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: var(--surface);
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .svc-action:hover {
+      background: var(--surface-2);
+      text-decoration: none;
     }
 
     .svc-tag {
@@ -456,6 +493,52 @@
       margin-left: 4px;
     }
 
+    .svc-confidence {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .confidence-pill {
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 4px 5px;
+      background: var(--bg);
+    }
+
+    .confidence-pill.warn {
+      background: #fffbeb;
+      border-color: #fde68a;
+    }
+
+    .confidence-pill.bad {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
+    .confidence-label {
+      display: block;
+      font-size: 8.5px;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .confidence-value {
+      display: block;
+      margin-top: 1px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .detail-approx-note {
       margin-top: 8px;
       padding: 8px 10px;
@@ -476,6 +559,29 @@
       font-size: 11px;
       color: #991b1b;
       line-height: 1.4;
+    }
+
+    .detail-actions {
+      display: flex;
+      gap: 6px;
+      margin: 12px 0 4px;
+      flex-wrap: wrap;
+    }
+
+    .detail-action {
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 7px 9px;
+      background: var(--bg);
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .detail-action:hover {
+      background: var(--surface-2);
+      text-decoration: none;
     }
 
     .no-results {
@@ -707,6 +813,38 @@
       opacity: 0.7;
     }
 
+    .map-search {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 998;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .map-search-btn {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 7px 10px;
+      font-family: inherit;
+    }
+
+    .map-search-btn:hover { border-color: var(--accent); }
+    .map-search-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .map-search-btn.clear { display: none; padding: 7px 8px; }
+    .map-search-btn.clear.visible { display: inline-flex; }
+
     /* ===== DETAIL BADGES ===== */
     .detail-badges {
       display: flex;
@@ -896,6 +1034,12 @@
         overflow-y: auto;
       }
 
+      .map-search {
+        top: auto;
+        bottom: 44px;
+        right: 8px;
+      }
+
       .leaflet-top.leaflet-left { top: 8px; }
 
       .sidebar-header { padding: 12px 12px 8px; }
@@ -956,7 +1100,7 @@
           <div class="filter-row">
             <select class="filter-select" id="filter-state">
               <option value="">All states</option>
-              <option value="ACT">ACT</option><option value="NSW" selected>NSW</option>
+              <option value="ACT">ACT</option><option value="NSW">NSW</option>
               <option value="NT">NT</option><option value="QLD">QLD</option>
               <option value="SA">SA</option><option value="TAS">TAS</option>
               <option value="VIC">VIC</option><option value="WA">WA</option>
@@ -986,6 +1130,10 @@
     <div class="map-area">
       <div id="map"></div>
       <div class="cat-chips" id="cat-chips"></div>
+      <div class="map-search">
+        <button type="button" class="map-search-btn" id="search-map-area">Search this area</button>
+        <button type="button" class="map-search-btn clear" id="clear-map-area" title="Clear map area filter" aria-label="Clear map area filter">&times;</button>
+      </div>
       <div class="loading-overlay" id="loading">
         <div class="loading-card">
           <div class="loading-title">Loading services</div>
@@ -1016,6 +1164,11 @@
     let highlightMarker = null;
     let userLocation = null;
     let userLocationMarker = null;
+    let selectedServiceId = null;
+    let mapBoundsFilter = null;
+    let urlHydrated = false;
+    let suppressUrlUpdate = false;
+    let hydratedSelectedShown = false;
 
     // Haversine distance in metres between two lat/lng points.
     function distanceMetres(lat1, lng1, lat2, lng2) {
@@ -1296,7 +1449,7 @@
             document.getElementById('loading').style.display = 'none';
             buildCatFilter();
             buildSuburbFilter();
-            document.getElementById('filter-category').value = 'employment';
+            hydrateFromUrl();
             updateStats();
             applyFilters();
             firstBatch = false;
@@ -1441,7 +1594,7 @@
           const m = L.marker([s.latitude, s.longitude], { icon: markerIcon(s.category, s.location_precision) });
           m.on('click', () => {
             setHighlight(s.latitude, s.longitude);
-            showDetail(s);
+            selectService(s, false);
           });
           markers.addLayer(m);
         }
@@ -1452,7 +1605,8 @@
       const frag = document.createDocumentFragment();
       services.slice(0, limit).forEach(s => {
         const d = document.createElement('div');
-        d.className = 'service-card';
+        d.className = 'service-card' + (selectedServiceId && s.id === selectedServiceId ? ' active' : '');
+        d.dataset.serviceId = s.id || '';
         const loc = [s.suburb, s.state].filter(Boolean).join(', ');
         const srcClass = isOsm(s) ? 'src-osm' : 'src-gov';
         const srcLabel = isOsm(s) ? 'OSM' : 'GOV';
@@ -1467,10 +1621,18 @@
         const vintageBadge = vintage
           ? `<span class="svc-vintage ${vintageClass(vintage.year)}" title="Source data published ${vintage.label} (${ageYears(vintage.year)} years ago). Verify before referring.">${vintage.label}</span>`
           : '';
+        const ageClass = vintage && ageYears(vintage.year) >= 5 ? 'bad' : vintage && ageYears(vintage.year) >= 2 ? 'warn' : '';
+        const locationClass = s.location_precision === 'postcode' ? 'warn' : s.location_precision === 'none' ? 'bad' : '';
+        const phoneAction = s.phone ? `<a class="svc-action" href="tel:${s.phone}" title="Call ${esc(s.name)}" onclick="event.stopPropagation()">Call</a>` : '';
+        const webAction = s.website ? `<a class="svc-action" href="${s.website}" target="_blank" rel="noopener" title="Open website" onclick="event.stopPropagation()">Web</a>` : '';
+        const reportAction = `<a class="svc-action" href="${reportIssueUrl(s)}" target="_blank" rel="noopener" title="Report an issue" onclick="event.stopPropagation()">!</a>`;
         const descHtml = descSnippet(s.description, query);
         const descLine = descHtml ? `<div class="svc-desc">${descHtml}</div>` : '';
         d.innerHTML = `
-          <div class="svc-name">${esc(s.name||'Unnamed')}</div>
+          <div class="svc-head">
+            <div class="svc-name">${esc(s.name||'Unnamed')}</div>
+            <div class="svc-actions">${phoneAction}${webAction}${reportAction}</div>
+          </div>
           ${descLine}
           <div class="svc-row">
             <span class="svc-tag t-${s.category||'other'}">${CAT[s.category]||'Other'}</span>
@@ -1481,13 +1643,14 @@
             <span class="svc-meta">${esc(loc)}</span>
             ${distBadge}
           </div>
+          <div class="svc-confidence">
+            <span class="confidence-pill"><span class="confidence-label">Record</span><span class="confidence-value">${qualityLabel(s.quality)}</span></span>
+            <span class="confidence-pill ${locationClass}"><span class="confidence-label">Location</span><span class="confidence-value">${locationLabel(s)}</span></span>
+            <span class="confidence-pill ${ageClass}"><span class="confidence-label">Source</span><span class="confidence-value">${serviceAgeLabel(s)}</span></span>
+          </div>
         `;
         d.onclick = () => {
-          if (s.latitude && s.longitude) {
-            map.setView([s.latitude, s.longitude], 15);
-            setHighlight(s.latitude, s.longitude);
-          }
-          showDetail(s);
+          selectService(s);
         };
         frag.appendChild(d);
       });
@@ -1504,6 +1667,7 @@
       const p = document.getElementById('detail-panel');
       const c = document.getElementById('detail-content');
       const addr = [s.address, s.suburb, s.state, s.postcode].filter(Boolean).join(', ');
+      const directions = directionsUrl(s, addr);
 
       const srcClass = isOsm(s) ? 'src-osm' : 'src-gov';
       const srcLabel = isOsm(s) ? 'OpenStreetMap' : 'Government';
@@ -1534,6 +1698,12 @@
         const q = document.getElementById('search').value.trim();
         h += `<div class="detail-desc">${highlightAll(s.description, q)}</div>`;
       }
+      h += '<div class="detail-actions">';
+      if (s.phone) h += `<a class="detail-action" href="tel:${s.phone}">Call</a>`;
+      if (s.website) h += `<a class="detail-action" href="${s.website}" target="_blank" rel="noopener">Website</a>`;
+      if (directions) h += `<a class="detail-action" href="${directions}" target="_blank" rel="noopener">Directions</a>`;
+      h += `<a class="detail-action" href="${reportIssueUrl(s)}" target="_blank" rel="noopener">Report issue</a>`;
+      h += '</div>';
       h += '<div class="detail-grid">';
       if (addr) h += r('Address', esc(addr));
       if (s.phone) h += r('Phone', `<a href="tel:${s.phone}">${esc(s.phone)}</a>`);
@@ -1543,6 +1713,9 @@
       if (s.eligibility) h += r('Eligibility', esc(s.eligibility));
       if (s.cost) h += r('Cost', esc(s.cost));
       if (s.source_organisation) h += r('Source', esc(s.source_organisation));
+      if (s.source_name) h += r('Dataset', esc(s.source_name));
+      if (s.source_url) h += r('Source URL', `<a href="${s.source_url}" target="_blank" rel="noopener">${esc(host(s.source_url))}</a>`);
+      if (s.source_date) h += r('Refreshed', esc(s.source_date));
       if (vintage) h += r('Vintage', `${vintage.label} <span class="vintage-age">(${ageYears(vintage.year)} years ago)</span>`);
       h += '</div>';
       c.innerHTML = h;
@@ -1553,6 +1726,101 @@
     function host(u){try{return new URL(u).hostname}catch{return u}}
     function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
     function escapeRegex(s){return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');}
+    function serviceAgeLabel(s) {
+      const vintage = SOURCE_VINTAGE[s.source_id];
+      return vintage ? `${ageYears(vintage.year)}y old` : 'source date unknown';
+    }
+    function locationLabel(s) {
+      if (s.location_precision === 'address') return 'exact pin';
+      if (s.location_precision === 'postcode') return 'postcode pin';
+      return 'no pin';
+    }
+    function reportIssueUrl(s) {
+      const title = `Data issue: ${s.name || s.id || 'service record'}`;
+      const lines = [
+        `Service ID: ${s.id || ''}`,
+        `Name: ${s.name || ''}`,
+        `Source: ${s.source_name || ''}`,
+        `Source organisation: ${s.source_organisation || ''}`,
+        `Source URL: ${s.source_url || ''}`,
+        '',
+        'What needs correcting?',
+        ''
+      ];
+      return 'https://github.com/oa-sa/data/issues/new?title=' +
+        encodeURIComponent(title) + '&body=' + encodeURIComponent(lines.join('\n'));
+    }
+    function directionsUrl(s, addr) {
+      const target = addr || (s.latitude && s.longitude ? `${s.latitude},${s.longitude}` : '');
+      return target ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(target)}` : '';
+    }
+    function setMapAreaFilter(active) {
+      mapBoundsFilter = active ? map.getBounds() : null;
+      document.getElementById('search-map-area').classList.toggle('active', !!active);
+      document.getElementById('clear-map-area').classList.toggle('visible', !!active);
+      applyFilters();
+    }
+    function updateUrl() {
+      if (suppressUrlUpdate || !urlHydrated) return;
+      const params = new URLSearchParams();
+      const q = document.getElementById('search').value.trim();
+      const st = document.getElementById('filter-state').value;
+      const cat = activeChips.size === 1 ? [...activeChips][0] : document.getElementById('filter-category').value;
+      const sub = document.getElementById('filter-suburb').value;
+      if (q) params.set('q', q);
+      if (st) params.set('state', st);
+      if (cat) params.set('category', cat);
+      if (sub) params.set('suburb', sub);
+      if (selectedServiceId) params.set('id', selectedServiceId);
+      if (mapBoundsFilter) {
+        const sw = mapBoundsFilter.getSouthWest();
+        const ne = mapBoundsFilter.getNorthEast();
+        params.set('bbox', [sw.lat, sw.lng, ne.lat, ne.lng].map(n => n.toFixed(4)).join(','));
+      }
+      const qs = params.toString();
+      history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+    }
+    function hydrateFromUrl() {
+      if (urlHydrated) return;
+      suppressUrlUpdate = true;
+      const params = new URLSearchParams(location.search);
+      document.getElementById('search').value = params.get('q') || '';
+      document.getElementById('filter-state').value = params.get('state') || '';
+      buildSuburbFilter();
+      const sub = params.get('suburb');
+      if (sub) document.getElementById('filter-suburb').value = sub;
+      const cat = params.get('category');
+      if (cat) {
+        document.getElementById('filter-category').value = cat;
+        activeChips.clear();
+        activeChips.add(cat);
+        document.querySelectorAll('.cat-chip').forEach(chip => {
+          chip.classList.toggle('active', chip.dataset.cat === cat);
+        });
+      }
+      selectedServiceId = params.get('id') || null;
+      const bbox = (params.get('bbox') || '').split(',').map(Number);
+      if (bbox.length === 4 && bbox.every(Number.isFinite)) {
+        mapBoundsFilter = L.latLngBounds([bbox[0], bbox[1]], [bbox[2], bbox[3]]);
+        map.fitBounds(mapBoundsFilter, { padding: [20, 20] });
+        document.getElementById('search-map-area').classList.add('active');
+        document.getElementById('clear-map-area').classList.add('visible');
+      }
+      urlHydrated = true;
+      suppressUrlUpdate = false;
+    }
+    function selectService(s, focusMap = true) {
+      selectedServiceId = s.id || null;
+      if (focusMap && s.latitude && s.longitude) {
+        map.setView([s.latitude, s.longitude], 15);
+        setHighlight(s.latitude, s.longitude);
+      }
+      showDetail(s);
+      document.querySelectorAll('.service-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.serviceId === selectedServiceId);
+      });
+      updateUrl();
+    }
 
     // Build a highlighted description snippet for the list view. When a search
     // query is present and matched inside the description, the snippet centres
@@ -1623,6 +1891,9 @@
       }
       if (sub) f = f.filter(s => s.suburb === sub);
       if (q) f = f.filter(s => [s.name,s.description,s.address,s.suburb,s.phone].filter(Boolean).join(' ').toLowerCase().includes(q));
+      if (mapBoundsFilter) {
+        f = f.filter(s => s.latitude && s.longitude && mapBoundsFilter.contains([s.latitude, s.longitude]));
+      }
 
       // Sort by distance when Near me is active; records without
       // coordinates sort to the end.
@@ -1637,12 +1908,29 @@
 
       filteredServices = f;
       renderServices(f);
+      if (selectedServiceId && !hydratedSelectedShown) {
+        const selected = allServices.find(s => s.id === selectedServiceId);
+        if (selected) {
+          hydratedSelectedShown = true;
+          selectService(selected, true);
+          return;
+        }
+      }
+      updateUrl();
     }
 
     let t;
     document.getElementById('search').addEventListener('input', () => { clearTimeout(t); t = setTimeout(applyFilters, 200); });
     document.getElementById('filter-state').addEventListener('change', () => { buildSuburbFilter(); applyFilters(); });
-    document.getElementById('filter-category').addEventListener('change', applyFilters);
+    document.getElementById('filter-category').addEventListener('change', () => {
+      activeChips.clear();
+      const cat = document.getElementById('filter-category').value;
+      if (cat) activeChips.add(cat);
+      document.querySelectorAll('.cat-chip').forEach(chip => {
+        chip.classList.toggle('active', activeChips.has(chip.dataset.cat));
+      });
+      applyFilters();
+    });
     document.getElementById('filter-suburb').addEventListener('change', applyFilters);
     document.getElementById('clear-filters').addEventListener('click', () => {
       document.getElementById('search').value='';
@@ -1650,6 +1938,11 @@
       document.getElementById('filter-category').value='';
       document.getElementById('filter-suburb').innerHTML='<option value="">All suburbs</option>';
       activeChips.clear();
+      selectedServiceId = null;
+      mapBoundsFilter = null;
+      hydratedSelectedShown = false;
+      document.getElementById('search-map-area').classList.remove('active');
+      document.getElementById('clear-map-area').classList.remove('visible');
       document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
       // clearUserLocation calls applyFilters internally
       clearUserLocation();
@@ -1669,8 +1962,13 @@
     });
     document.getElementById('detail-close').addEventListener('click', () => {
       document.getElementById('detail-panel').classList.remove('visible');
+      selectedServiceId = null;
+      document.querySelectorAll('.service-card').forEach(card => card.classList.remove('active'));
       clearHighlight();
+      updateUrl();
     });
+    document.getElementById('search-map-area').addEventListener('click', () => setMapAreaFilter(true));
+    document.getElementById('clear-map-area').addEventListener('click', () => setMapAreaFilter(false));
 
     document.getElementById('download-csv').addEventListener('click', () => {
       if (!filteredServices.length) return;
