@@ -340,7 +340,7 @@
       } catch(e) {
         console.error(e);
         if (!allServices.length) {
-          document.getElementById('loading').innerHTML = '<div class="loading-card" style="text-align:center"><div class="loading-title" style="color:#dc2626">Failed to load data</div><div class="loading-subtitle">Please try refreshing the page</div></div>';
+          document.getElementById('loading').innerHTML = '<div class="skeleton-map" style="width:100%"><div class="skeleton-map-label" style="color:#dc2626;border-color:#fecaca">Failed to load data — please try refreshing the page</div></div>';
         } else {
           // Partial load - hide stream bar, work with what we have
           isStreaming = false;

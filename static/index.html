@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AOSI - Australian Open Services Index</title>
   <meta name="description" content="An open dataset of 24,000+ support services across Australia. Browse, search and explore.">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="/static/vendor/leaflet-markercluster/MarkerCluster.css" />
+  <link rel="stylesheet" href="/static/vendor/leaflet-markercluster/MarkerCluster.Default.css" />
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
@@ -146,12 +144,49 @@
         <button type="button" class="map-search-btn clear" id="clear-map-area" title="Clear map area filter" aria-label="Clear map area filter">&times;</button>
       </div>
       <div class="loading-overlay" id="loading">
-        <div class="loading-card">
-          <div class="loading-title">Loading services</div>
-          <div class="loading-subtitle">Connecting to 27 open data sources</div>
-          <div class="loading-phase" id="loading-phase">
+        <div class="skeleton-sidebar">
+          <div class="skeleton-header">
+            <div class="skeleton-line w60"></div>
+            <div class="skeleton-line w80 short"></div>
+          </div>
+          <div class="skeleton-filters">
+            <div class="skeleton-input"></div>
+            <div class="skeleton-row"><div class="skeleton-select"></div><div class="skeleton-select"></div></div>
+            <div class="skeleton-input short"></div>
+          </div>
+          <div class="skeleton-bar">
+            <div class="skeleton-line w40 short"></div>
+          </div>
+          <div class="skeleton-card" aria-hidden="true">
+            <div class="skeleton-line w70"></div>
+            <div class="skeleton-line w90 short"></div>
+            <div class="skeleton-badges"><span class="skeleton-badge"></span><span class="skeleton-badge wide"></span><span class="skeleton-badge"></span></div>
+          </div>
+          <div class="skeleton-card" aria-hidden="true">
+            <div class="skeleton-line w50"></div>
+            <div class="skeleton-line w80 short"></div>
+            <div class="skeleton-badges"><span class="skeleton-badge wide"></span><span class="skeleton-badge"></span></div>
+          </div>
+          <div class="skeleton-card" aria-hidden="true">
+            <div class="skeleton-line w60"></div>
+            <div class="skeleton-line w70 short"></div>
+            <div class="skeleton-badges"><span class="skeleton-badge"></span><span class="skeleton-badge wide"></span><span class="skeleton-badge"></span></div>
+          </div>
+          <div class="skeleton-card" aria-hidden="true">
+            <div class="skeleton-line w80"></div>
+            <div class="skeleton-line w50 short"></div>
+            <div class="skeleton-badges"><span class="skeleton-badge"></span><span class="skeleton-badge"></span></div>
+          </div>
+          <div class="skeleton-card" aria-hidden="true">
+            <div class="skeleton-line w40"></div>
+            <div class="skeleton-line w90 short"></div>
+            <div class="skeleton-badges"><span class="skeleton-badge wide"></span><span class="skeleton-badge"></span><span class="skeleton-badge"></span></div>
+          </div>
+        </div>
+        <div class="skeleton-map">
+          <div class="skeleton-map-label">
             <span class="loading-dot"></span>
-            <span id="loading-text">Fetching first results</span>
+            Loading services...
           </div>
         </div>
       </div>
@@ -166,8 +201,8 @@
     </div>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="/static/vendor/leaflet/leaflet.js"></script>
+  <script src="/static/vendor/leaflet-markercluster/leaflet.markercluster.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>
