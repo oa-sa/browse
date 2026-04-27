@@ -307,6 +307,7 @@
             hydrateFromUrl();
             updateStats();
             applyFilters();
+            showNearbyPrompt();
             firstBatch = false;
             isStreaming = true;
 
@@ -1116,6 +1117,28 @@
       if (isMobile() && e.target.closest('.service-card')) {
         setMobileView('map');
       }
+    });
+
+    function showNearbyPrompt() {
+      if (location.search) return;
+      if (localStorage.getItem('aosi-prompt-dismissed')) return;
+      const prompt = document.getElementById('nearby-prompt');
+      prompt.classList.add('visible');
+    }
+
+    function dismissNearbyPrompt() {
+      const prompt = document.getElementById('nearby-prompt');
+      prompt.classList.remove('visible');
+      localStorage.setItem('aosi-prompt-dismissed', '1');
+    }
+
+    document.getElementById('nearby-prompt-btn').addEventListener('click', () => {
+      dismissNearbyPrompt();
+      requestUserLocation();
+    });
+
+    document.getElementById('nearby-prompt-dismiss').addEventListener('click', () => {
+      dismissNearbyPrompt();
     });
 
     initMap();
