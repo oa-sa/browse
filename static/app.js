@@ -10,6 +10,7 @@
     let suppressUrlUpdate = false;
     let hydratedSelectedShown = false;
     let placeSearch = null;
+    let prevFilterKey = '';
 
     // Haversine distance in metres between two lat/lng points.
     function distanceMetres(lat1, lng1, lat2, lng2) {
@@ -969,6 +970,19 @@
 
       filteredServices = f;
       renderServices(f);
+
+      const filterKey = [q, st, cat, [...activeChips].sort().join(','), sub].join('|');
+      if (urlHydrated && !isStreaming && filterKey !== prevFilterKey && !mapBoundsFilter && !userLocation && !placeSearch) {
+        const geoResults = f.filter(s => s.latitude && s.longitude);
+        if (geoResults.length > 0 && (q || st || cat || activeChips.size || sub)) {
+          const bounds = L.latLngBounds(geoResults.map(s => [s.latitude, s.longitude]));
+          map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 15, duration: 0.8 });
+        } else if (!q && !st && !cat && !activeChips.size && !sub) {
+          map.flyTo([-28.5, 134], 5, { duration: 0.8 });
+        }
+      }
+      prevFilterKey = filterKey;
+
       renderActiveFilters();
       if (selectedServiceId && !hydratedSelectedShown) {
         const selected = allServices.find(s => s.id === selectedServiceId);
