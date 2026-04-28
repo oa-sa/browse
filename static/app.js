@@ -251,25 +251,26 @@
         styleBtn.classList.toggle('active', mapStyle === 'satellite');
       });
 
-      document.getElementById('map-boundaries-toggle').addEventListener('click', async () => {
-        const btn = document.getElementById('map-boundaries-toggle');
-        if (!boundaryLayer) {
-          const resp = await fetch('/static/vendor/au-states.json');
-          const geojson = await resp.json();
-          boundaryLayer = L.geoJSON(geojson, {
-            style: { color: '#0969da', weight: 1.5, opacity: 0.5, fillColor: '#0969da', fillOpacity: 0.03, dashArray: '6 4' },
-            onEachFeature(feature, layer) {
-              layer.bindTooltip(feature.properties.state, { permanent: false, direction: 'center', className: 'boundary-label' });
-            }
-          });
-        }
+      fetch('/static/vendor/au-states.json').then(r => r.json()).then(geojson => {
+        boundaryLayer = L.geoJSON(geojson, {
+          style: { color: '#0969da', weight: 1.5, opacity: 0.5, fillColor: '#0969da', fillOpacity: 0.03, dashArray: '6 4' },
+          onEachFeature(feature, layer) {
+            layer.bindTooltip(feature.properties.state, { permanent: false, direction: 'center', className: 'boundary-label' });
+          }
+        });
+        boundaryLayer.addTo(map);
+        boundariesVisible = true;
+        document.getElementById('map-boundaries-toggle').classList.add('active');
+      });
+      document.getElementById('map-boundaries-toggle').addEventListener('click', () => {
+        if (!boundaryLayer) return;
         boundariesVisible = !boundariesVisible;
         if (boundariesVisible) {
           boundaryLayer.addTo(map);
         } else {
           map.removeLayer(boundaryLayer);
         }
-        btn.classList.toggle('active', boundariesVisible);
+        document.getElementById('map-boundaries-toggle').classList.toggle('active', boundariesVisible);
       });
 
       markers = L.markerClusterGroup({
