@@ -225,7 +225,7 @@
     }
 
     function initMap() {
-      map = L.map('map', { zoomSnap: 0.5 }).setView([-28, 134], 4.5);
+      map = L.map('map', { zoomSnap: 0.5 }).setView([-28, 134], 5);
       const tileLayers = {
         light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
           attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
@@ -1055,7 +1055,7 @@
           const bounds = L.latLngBounds(geoResults.map(s => [s.latitude, s.longitude]));
           map.flyToBounds(bounds, { padding: [40, 40], maxZoom: 15, duration: 0.8 });
         } else if (!q && !st && !cat && !activeChips.size && !sub) {
-          map.flyTo([-28, 134], 4.5, { duration: 0.8 });
+          map.flyTo([-28, 134], 5, { duration: 0.8 });
         }
       }
       prevFilterKey = filterKey;
