@@ -2,6 +2,7 @@
     let filteredServices = [];
     let map, markers, currentTileLayer, mapStyle = 'satellite';
     let boundaryLayer = null, boundariesVisible = false;
+    let sa3Layer = null, sa3Visible = false, sa3Loaded = false;
     let highlightMarker = null;
     let userLocation = null;
     let userLocationMarker = null;
@@ -272,6 +273,41 @@
         }
         document.getElementById('map-boundaries-toggle').classList.toggle('active', boundariesVisible);
       });
+
+      function loadSA3() {
+        if (sa3Loaded) return Promise.resolve();
+        sa3Loaded = true;
+        return fetch('/static/vendor/au-sa3.json').then(r => r.json()).then(geojson => {
+          sa3Layer = L.geoJSON(geojson, {
+            style: { color: '#8b5cf6', weight: 1, opacity: 0.6, fillColor: '#8b5cf6', fillOpacity: 0.04, dashArray: '4 3' },
+            onEachFeature(feature, layer) {
+              layer.bindTooltip(feature.properties.sa3_name_2021, { permanent: false, direction: 'center', className: 'sa3-label', sticky: true });
+            }
+          });
+        });
+      }
+
+      function updateSA3Visibility() {
+        if (!sa3Layer) return;
+        const zoom = map.getZoom();
+        if (sa3Visible && zoom >= 7) {
+          if (!map.hasLayer(sa3Layer)) sa3Layer.addTo(map);
+        } else {
+          if (map.hasLayer(sa3Layer)) map.removeLayer(sa3Layer);
+        }
+      }
+
+      document.getElementById('map-regions-toggle').addEventListener('click', () => {
+        sa3Visible = !sa3Visible;
+        document.getElementById('map-regions-toggle').classList.toggle('active', sa3Visible);
+        if (sa3Visible) {
+          loadSA3().then(updateSA3Visibility);
+        } else {
+          updateSA3Visibility();
+        }
+      });
+
+      map.on('zoomend', updateSA3Visibility);
 
       markers = L.markerClusterGroup({
         maxClusterRadius: 45,
