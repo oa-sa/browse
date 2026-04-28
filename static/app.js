@@ -236,11 +236,30 @@
         showCoverageOnHover: false,
         iconCreateFunction(cluster) {
           const n = cluster.getChildCount();
-          const s = n > 100 ? 44 : n > 10 ? 36 : 30;
-          return L.divIcon({
-            html: `<div style="width:${s}px;height:${s}px;background:rgba(9,105,218,0.1);border:1.5px solid rgba(9,105,218,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#0969da;font-family:Inter,sans-serif;">${n}</div>`,
-            className: '', iconSize: [s, s]
-          });
+          const sz = n > 100 ? 44 : n > 10 ? 36 : 30;
+          const children = cluster.getAllChildMarkers();
+          const counts = {};
+          children.forEach(m => { const c = m._svcCat || 'other'; counts[c] = (counts[c] || 0) + 1; });
+          const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+          const r = sz / 2, ir = r - 5;
+          let svg = `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" xmlns="http://www.w3.org/2000/svg">`;
+          if (entries.length === 1) {
+            svg += `<circle cx="${r}" cy="${r}" r="${r}" fill="${CAT_COLOR[entries[0][0]] || '#64748b'}" opacity="0.75"/>`;
+          } else {
+            let angle = -Math.PI / 2;
+            entries.forEach(([cat, count]) => {
+              const slice = (count / n) * 2 * Math.PI;
+              const x1 = r + r * Math.cos(angle), y1 = r + r * Math.sin(angle);
+              const x2 = r + r * Math.cos(angle + slice), y2 = r + r * Math.sin(angle + slice);
+              const large = slice > Math.PI ? 1 : 0;
+              svg += `<path d="M${r},${r} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z" fill="${CAT_COLOR[cat] || '#64748b'}" opacity="0.75"/>`;
+              angle += slice;
+            });
+          }
+          svg += `<circle cx="${r}" cy="${r}" r="${ir}" fill="#fff"/>`;
+          svg += `<text x="${r}" y="${r}" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" font-family="Inter,sans-serif" fill="#334155">${n}</text>`;
+          svg += `</svg>`;
+          return L.divIcon({ html: svg, className: 'cluster-pie', iconSize: [sz, sz] });
         }
       });
       map.addLayer(markers);
@@ -473,10 +492,13 @@
       services.forEach(s => {
         if (s.latitude && s.longitude) {
           const m = L.marker([s.latitude, s.longitude], { icon: markerIcon(s.category, s.location_precision) });
+          const tipLabel = [s.name, s.suburb].filter(Boolean).join(', ');
+          if (tipLabel) m.bindTooltip(tipLabel, { direction: 'top', offset: [0, -6], className: 'svc-tooltip' });
           m.on('click', () => {
             setHighlight(s.latitude, s.longitude);
             selectService(s, false);
           });
+          m._svcCat = s.category;
           markers.addLayer(m);
         }
       });
