@@ -325,12 +325,12 @@
         while (url) {
           const resp = await fetch(url);
           const json = await resp.json();
-          if (json.rows) allServices.push(...json.rows);
+          const newRows = json.rows || [];
+          allServices.push(...newRows);
 
           const pct = Math.min(100, Math.round((allServices.length / estimated) * 100));
 
           if (firstBatch) {
-            // First batch arrived - hide overlay, show the UI immediately
             document.getElementById('loading').style.display = 'none';
             buildCatFilter();
             buildSuburbFilter();
@@ -345,21 +345,14 @@
               showStreamBar(allServices.length, pct);
             }
           } else {
-            // Subsequent batches - update stream bar and refresh filters/results
             showStreamBar(allServices.length, pct);
-            updateStats();
-            rebuildFilters();
-            applyFilters();
+            document.getElementById('results-count').textContent = allServices.length.toLocaleString() + ' results';
+            addMarkersForServices(newRows);
           }
 
-          if (json.next_url) {
-            url = json.next_url;
-          } else {
-            url = null;
-          }
+          url = json.next_url || null;
         }
 
-        // All done
         isStreaming = false;
         updateStats();
         rebuildFilters();
@@ -374,7 +367,6 @@
         if (!allServices.length) {
           document.getElementById('loading').innerHTML = '<div class="skeleton-map" style="width:100%"><div class="skeleton-map-label" style="color:#dc2626;border-color:#fecaca">Failed to load data — please try refreshing the page</div></div>';
         } else {
-          // Partial load - hide stream bar, work with what we have
           isStreaming = false;
           hideStreamBar();
         }
@@ -489,6 +481,24 @@
       return 2;
     }
 
+    function addMarkersForServices(services) {
+      const batch = [];
+      services.forEach(s => {
+        if (s.latitude && s.longitude) {
+          const m = L.marker([s.latitude, s.longitude], { icon: markerIcon(s.category, s.location_precision) });
+          const tipLabel = [s.name, s.suburb].filter(Boolean).join(', ');
+          if (tipLabel) m.bindTooltip(tipLabel, { direction: 'top', offset: [0, -6], className: 'svc-tooltip' });
+          m.on('click', () => {
+            setHighlight(s.latitude, s.longitude);
+            selectService(s, false);
+          });
+          m._svcCat = s.category;
+          batch.push(m);
+        }
+      });
+      if (batch.length) markers.addLayers(batch);
+    }
+
     function renderServices(services) {
       markers.clearLayers();
       const list = document.getElementById('results-list');
@@ -500,19 +510,7 @@
         return;
       }
 
-      services.forEach(s => {
-        if (s.latitude && s.longitude) {
-          const m = L.marker([s.latitude, s.longitude], { icon: markerIcon(s.category, s.location_precision) });
-          const tipLabel = [s.name, s.suburb].filter(Boolean).join(', ');
-          if (tipLabel) m.bindTooltip(tipLabel, { direction: 'top', offset: [0, -6], className: 'svc-tooltip' });
-          m.on('click', () => {
-            setHighlight(s.latitude, s.longitude);
-            selectService(s, false);
-          });
-          m._svcCat = s.category;
-          markers.addLayer(m);
-        }
-      });
+      addMarkersForServices(services);
 
       const query = document.getElementById('search').value.trim();
       const limit = 400;
