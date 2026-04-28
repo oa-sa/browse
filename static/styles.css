@@ -986,23 +986,20 @@
     /* ===== CATEGORY CHIPS ===== */
     .cat-chips {
       position: absolute;
-      top: 12px;
-      left: 12px;
-      right: 12px;
+      top: 0;
+      left: 0;
+      right: 0;
       z-index: 997;
       display: flex;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       gap: 5px;
+      padding: 10px 12px;
       pointer-events: none;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-      mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
-      -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
     }
-
-    .cat-chips::-webkit-scrollbar { display: none; }
 
     .cat-chip {
       pointer-events: auto;
@@ -1018,7 +1015,7 @@
       color: var(--text-secondary);
       cursor: pointer;
       transition: all 0.15s;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
       user-select: none;
       flex-shrink: 0;
     }
@@ -1105,7 +1102,7 @@
 
     .detail-quality .svc-quality { width: 8px; height: 8px; }
 
-    .leaflet-top.leaflet-left { top: 50px; }
+    .leaflet-top.leaflet-left { top: 80px; }
 
     /* ===== MAP CONTROLS ===== */
     .leaflet-bar {
@@ -1516,9 +1513,8 @@
       }
 
       .cat-chips {
-        top: 8px;
-        left: 8px;
-        right: 8px;
+        padding: 8px;
+        gap: 4px;
       }
 
       .leaflet-top.leaflet-left { top: 8px; }
