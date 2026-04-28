@@ -1158,6 +1158,62 @@
     .map-toggle-btn:hover { background: var(--bg); color: var(--accent); }
     .map-toggle-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
+    /* ===== MAP LEGEND ===== */
+    .map-legend {
+      position: absolute;
+      bottom: 28px;
+      left: 10px;
+      z-index: 800;
+    }
+    .map-legend-toggle {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-family: Inter, system-ui, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      transition: background 0.15s ease;
+    }
+    .map-legend-toggle:hover { background: var(--bg); }
+    .map-legend-body {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-top: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .map-legend.open .map-legend-body { display: block; }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text);
+      padding: 2px 0;
+      white-space: nowrap;
+    }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    .legend-dot-approx {
+      background: rgba(255,255,255,0.85) !important;
+      border: 2px dashed #64748b;
+      box-shadow: none;
+    }
+
     .boundary-label {
       font-family: Inter, system-ui, sans-serif;
       font-size: 11px;
@@ -1474,6 +1530,9 @@
       .sidebar-header { padding: 12px 12px 8px; }
       .controls { padding: 10px 12px; }
       .results-bar { padding: 8px 12px; }
+
+      .map-legend { bottom: 50px; }
+      .map-toggles { top: 44px; right: 8px; }
 
       .skeleton-sidebar { width: 100%; }
       .skeleton-map { display: none; }

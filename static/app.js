@@ -1151,6 +1151,20 @@
     document.getElementById('search-map-area').addEventListener('click', () => setMapAreaFilter(true));
     document.getElementById('clear-map-area').addEventListener('click', () => setMapAreaFilter(false));
 
+    (function initLegend() {
+      const body = document.getElementById('map-legend-body');
+      let html = '';
+      Object.entries(CAT).forEach(([key, label]) => {
+        const c = CAT_COLOR[key] || '#64748b';
+        html += `<div class="legend-item"><span class="legend-dot" style="background:${c}"></span>${label}</div>`;
+      });
+      html += `<div class="legend-item"><span class="legend-dot legend-dot-approx"></span>Approx location</div>`;
+      body.innerHTML = html;
+      document.getElementById('map-legend-toggle').addEventListener('click', () => {
+        document.getElementById('map-legend').classList.toggle('open');
+      });
+    })();
+
     document.getElementById('download-csv').addEventListener('click', () => {
       if (!filteredServices.length) return;
       const cols = ['name','category','readiness','description','address','suburb','state','postcode','phone','email','website','hours','eligibility','cost','latitude','longitude','quality','location_precision','distance'];
