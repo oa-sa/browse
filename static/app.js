@@ -210,17 +210,16 @@
     function markerIcon(cat, precision) {
       const c = CAT_COLOR[cat] || '#64748b';
       if (precision === 'postcode') {
-        // Hollow dashed ring = suburb-level approximation (postcode centroid)
         return L.divIcon({
-          className: '',
-          html: `<div style="width:14px;height:14px;border:2px dashed ${c};background:rgba(255,255,255,0.85);border-radius:50%;box-sizing:border-box;"></div>`,
+          className: 'svc-marker',
+          html: `<div class="marker-dot marker-approx" style="border-color:${c};"></div>`,
           iconSize: [14, 14], iconAnchor: [7, 7]
         });
       }
       return L.divIcon({
-        className: '',
-        html: `<div style="width:10px;height:10px;background:${c};border:2px solid #fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>`,
-        iconSize: [9, 9], iconAnchor: [5, 5]
+        className: 'svc-marker',
+        html: `<div class="marker-dot" style="background:${c};"></div>`,
+        iconSize: [10, 10], iconAnchor: [5, 5]
       });
     }
 

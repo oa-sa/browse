@@ -1294,6 +1294,27 @@
 
     .download-btn:hover { text-decoration: underline; }
 
+    /* ===== MAP MARKERS ===== */
+    .svc-marker { background: none !important; border: none !important; }
+    .marker-dot {
+      width: 10px; height: 10px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      cursor: pointer;
+    }
+    .marker-dot:hover {
+      transform: scale(1.5);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .marker-dot.marker-approx {
+      width: 14px; height: 14px;
+      background: rgba(255,255,255,0.85);
+      border: 2px dashed;
+      box-sizing: border-box;
+    }
+
     /* Leaflet overrides */
     .leaflet-popup-content-wrapper{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;}
     .leaflet-popup-tip{background:var(--surface);}
