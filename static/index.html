@@ -139,18 +139,20 @@
 
     <div class="map-area" role="region" aria-label="Map">
       <div id="map" aria-hidden="true"></div>
-      <div class="map-toggles">
-        <button type="button" class="map-toggle-btn" id="map-style-toggle" title="Toggle map style" aria-label="Toggle map style">Satellite</button>
-        <button type="button" class="map-toggle-btn" id="map-boundaries-toggle" title="Show state boundaries" aria-label="Show state boundaries">Boundaries</button>
-      </div>
-      <div class="map-legend" id="map-legend">
-        <div class="map-legend-body" id="map-legend-body"></div>
-        <button type="button" class="map-legend-toggle" id="map-legend-toggle" aria-label="Toggle legend">Legend</button>
-      </div>
       <div class="cat-chips" id="cat-chips"></div>
-      <div class="map-search">
-        <button type="button" class="map-search-btn" id="search-map-area">Search this area</button>
-        <button type="button" class="map-search-btn clear" id="clear-map-area" title="Clear map area filter" aria-label="Clear map area filter">&times;</button>
+      <div class="map-controls">
+        <div class="map-search">
+          <button type="button" class="map-search-btn" id="search-map-area">Search this area</button>
+          <button type="button" class="map-search-btn clear" id="clear-map-area" title="Clear map area filter" aria-label="Clear map area filter">&times;</button>
+        </div>
+        <div class="map-legend" id="map-legend">
+          <div class="map-legend-body" id="map-legend-body"></div>
+          <button type="button" class="map-legend-toggle" id="map-legend-toggle" aria-label="Toggle legend">Legend</button>
+        </div>
+        <div class="map-toggles">
+          <button type="button" class="map-toggle-btn" id="map-style-toggle" title="Toggle map style" aria-label="Toggle map style">Satellite</button>
+          <button type="button" class="map-toggle-btn" id="map-boundaries-toggle" title="Show state boundaries" aria-label="Show state boundaries">Boundaries</button>
+        </div>
       </div>
       <div class="loading-overlay" id="loading">
         <div class="skeleton-sidebar">
