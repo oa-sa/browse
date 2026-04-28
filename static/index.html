@@ -11,8 +11,9 @@
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+  <a href="#results-list" class="skip-link">Skip to results</a>
 
-  <header>
+  <header role="banner">
     <div class="header-left">
       <a href="/" class="logo">
         <span class="logo-mark">AOSI</span>
@@ -39,8 +40,8 @@
     <button class="mobile-tab" data-view="map" type="button">Map</button>
   </div>
 
-  <div class="main">
-    <div class="sidebar">
+  <main class="main">
+    <nav class="sidebar" aria-label="Service filters">
       <div class="sidebar-header">
         <div class="sidebar-title">Service Explorer</div>
         <div class="sidebar-desc">Search and filter 24,000+ services across Australia</div>
@@ -133,11 +134,11 @@
           <button class="clear-btn" id="clear-filters">Clear filters</button>
         </div>
       </div>
-      <div class="results-list" id="results-list"></div>
-    </div>
+      <div class="results-list" id="results-list" role="list" aria-label="Service results"></div>
+    </nav>
 
-    <div class="map-area">
-      <div id="map"></div>
+    <div class="map-area" role="region" aria-label="Map">
+      <div id="map" aria-hidden="true"></div>
       <div class="cat-chips" id="cat-chips"></div>
       <div class="map-search">
         <button type="button" class="map-search-btn" id="search-map-area">Search this area</button>
@@ -202,12 +203,12 @@
         <div class="stream-bar-fill" id="stream-bar-fill"></div>
         <span class="stream-bar-text" id="stream-bar-text"></span>
       </div>
-      <div class="detail" id="detail-panel">
-        <button class="detail-x" id="detail-close">&times;</button>
+      <div class="detail" id="detail-panel" role="dialog" aria-label="Service details" aria-modal="false">
+        <button class="detail-x" id="detail-close" aria-label="Close details">&times;</button>
         <div id="detail-content"></div>
       </div>
     </div>
-  </div>
+  </main>
 
   <script src="/static/vendor/leaflet/leaflet.js"></script>
   <script src="/static/vendor/leaflet-markercluster/leaflet.markercluster.js"></script>

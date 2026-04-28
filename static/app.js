@@ -263,6 +263,17 @@
         }
       });
       map.addLayer(markers);
+      markers.on('clustermouseover', function(e) {
+        const cluster = e.layer;
+        if (cluster._tipBound) return;
+        cluster._tipBound = true;
+        const children = cluster.getAllChildMarkers();
+        const counts = {};
+        children.forEach(m => { const c = m._svcCat || 'other'; counts[c] = (counts[c] || 0) + 1; });
+        const top3 = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        const lines = top3.map(([cat, n]) => `${CAT[cat] || 'Other'}: ${n}`);
+        cluster.bindTooltip(lines.join('<br>'), { direction: 'top', offset: [0, -10], className: 'cluster-tooltip' }).openTooltip();
+      });
       map.on('moveend', () => {
         if (!mapBoundsFilter && urlHydrated) {
           document.querySelector('.map-search').classList.add('visible');
@@ -509,6 +520,8 @@
       services.slice(0, limit).forEach(s => {
         const d = document.createElement('div');
         d.className = 'service-card' + (selectedServiceId && s.id === selectedServiceId ? ' active' : '');
+        d.setAttribute('role', 'listitem');
+        d.setAttribute('tabindex', '0');
         d.dataset.serviceId = s.id || '';
         const loc = [s.suburb, s.state].filter(Boolean).join(', ');
         const srcClass = isOsm(s) ? 'src-osm' : 'src-gov';
@@ -554,9 +567,8 @@
             <span class="confidence-pill ${ageClass}"><span class="confidence-label">Source</span><span class="confidence-value">${serviceAgeLabel(s)}</span></span>
           </div>
         `;
-        d.onclick = () => {
-          selectService(s);
-        };
+        d.onclick = () => { selectService(s); };
+        d.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectService(s); } };
         frag.appendChild(d);
       });
       list.appendChild(frag);
@@ -819,6 +831,8 @@
         card.classList.toggle('active', card.dataset.serviceId === selectedServiceId);
       });
       updateUrl();
+      const closeBtn = document.getElementById('detail-close');
+      if (closeBtn) closeBtn.focus();
     }
 
     // Build a highlighted description snippet for the list view. When a search
@@ -1082,12 +1096,20 @@
         requestUserLocation();
       }
     });
-    document.getElementById('detail-close').addEventListener('click', () => {
+    function closeDetail() {
+      const wasActive = document.querySelector('.service-card.active');
       document.getElementById('detail-panel').classList.remove('visible');
       selectedServiceId = null;
       document.querySelectorAll('.service-card').forEach(card => card.classList.remove('active'));
       clearHighlight();
       updateUrl();
+      if (wasActive) wasActive.focus();
+    }
+    document.getElementById('detail-close').addEventListener('click', closeDetail);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('detail-panel').classList.contains('visible')) {
+        closeDetail();
+      }
     });
     document.getElementById('search-map-area').addEventListener('click', () => setMapAreaFilter(true));
     document.getElementById('clear-map-area').addEventListener('click', () => setMapAreaFilter(false));
