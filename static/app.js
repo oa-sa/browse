@@ -1,6 +1,6 @@
     let allServices = [];
     let filteredServices = [];
-    let map, markers;
+    let map, markers, currentTileLayer, mapStyle = 'light';
     let highlightMarker = null;
     let userLocation = null;
     let userLocationMarker = null;
@@ -225,10 +225,28 @@
 
     function initMap() {
       map = L.map('map').setView([-28.5, 134], 5);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        maxZoom: 19
-      }).addTo(map);
+      const tileLayers = {
+        light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; <a href="https://openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+          maxZoom: 19
+        }),
+        satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          attribution: '&copy; <a href="https://www.esri.com/">Esri</a> &copy; Maxar, Earthstar',
+          maxZoom: 19
+        })
+      };
+      currentTileLayer = tileLayers.light;
+      currentTileLayer.addTo(map);
+
+      document.getElementById('map-style-toggle').addEventListener('click', () => {
+        map.removeLayer(currentTileLayer);
+        mapStyle = mapStyle === 'light' ? 'satellite' : 'light';
+        currentTileLayer = tileLayers[mapStyle];
+        currentTileLayer.addTo(map);
+        const btn = document.getElementById('map-style-toggle');
+        btn.textContent = mapStyle === 'light' ? 'Satellite' : 'Map';
+        btn.classList.toggle('active', mapStyle === 'satellite');
+      });
 
       markers = L.markerClusterGroup({
         maxClusterRadius: 45,
