@@ -17,7 +17,7 @@
       "dest": "/static/oasa-whitepaper.pdf"
     },
     {
-      "src": "/static/(.*\\.(css|js|png|jpg|svg|woff2?))",
+      "src": "/static/(.*\\.(css|js|json|png|jpg|svg|woff2?))",
       "headers": { "Cache-Control": "public, max-age=604800, immutable" },
       "dest": "/static/$1"
     },

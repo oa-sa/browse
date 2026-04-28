@@ -1,6 +1,7 @@
     let allServices = [];
     let filteredServices = [];
     let map, markers, currentTileLayer, mapStyle = 'light';
+    let boundaryLayer = null, boundariesVisible = false;
     let highlightMarker = null;
     let userLocation = null;
     let userLocationMarker = null;
@@ -246,6 +247,27 @@
         const btn = document.getElementById('map-style-toggle');
         btn.textContent = mapStyle === 'light' ? 'Satellite' : 'Map';
         btn.classList.toggle('active', mapStyle === 'satellite');
+      });
+
+      document.getElementById('map-boundaries-toggle').addEventListener('click', async () => {
+        const btn = document.getElementById('map-boundaries-toggle');
+        if (!boundaryLayer) {
+          const resp = await fetch('/static/vendor/au-states.json');
+          const geojson = await resp.json();
+          boundaryLayer = L.geoJSON(geojson, {
+            style: { color: '#0969da', weight: 1.5, opacity: 0.5, fillColor: '#0969da', fillOpacity: 0.03, dashArray: '6 4' },
+            onEachFeature(feature, layer) {
+              layer.bindTooltip(feature.properties.state, { permanent: false, direction: 'center', className: 'boundary-label' });
+            }
+          });
+        }
+        boundariesVisible = !boundariesVisible;
+        if (boundariesVisible) {
+          boundaryLayer.addTo(map);
+        } else {
+          map.removeLayer(boundaryLayer);
+        }
+        btn.classList.toggle('active', boundariesVisible);
       });
 
       markers = L.markerClusterGroup({
