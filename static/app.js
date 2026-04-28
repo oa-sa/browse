@@ -1,6 +1,6 @@
     let allServices = [];
     let filteredServices = [];
-    let map, markers, currentTileLayer, mapStyle = 'light';
+    let map, markers, currentTileLayer, mapStyle = 'satellite';
     let boundaryLayer = null, boundariesVisible = false;
     let highlightMarker = null;
     let userLocation = null;
@@ -236,17 +236,19 @@
           maxZoom: 19
         })
       };
-      currentTileLayer = tileLayers.light;
+      currentTileLayer = tileLayers.satellite;
       currentTileLayer.addTo(map);
 
+      const styleBtn = document.getElementById('map-style-toggle');
+      styleBtn.textContent = 'Map';
+      styleBtn.classList.add('active');
       document.getElementById('map-style-toggle').addEventListener('click', () => {
         map.removeLayer(currentTileLayer);
         mapStyle = mapStyle === 'light' ? 'satellite' : 'light';
         currentTileLayer = tileLayers[mapStyle];
         currentTileLayer.addTo(map);
-        const btn = document.getElementById('map-style-toggle');
-        btn.textContent = mapStyle === 'light' ? 'Satellite' : 'Map';
-        btn.classList.toggle('active', mapStyle === 'satellite');
+        styleBtn.textContent = mapStyle === 'light' ? 'Satellite' : 'Map';
+        styleBtn.classList.toggle('active', mapStyle === 'satellite');
       });
 
       document.getElementById('map-boundaries-toggle').addEventListener('click', async () => {
