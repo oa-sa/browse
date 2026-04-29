@@ -767,9 +767,11 @@
     }
 
     .detail-section {
-      margin-top: 14px;
-      border-top: 1px solid var(--border);
-      padding-top: 10px;
+      margin-top: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
     }
 
     .detail-section-title {
