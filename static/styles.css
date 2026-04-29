@@ -137,8 +137,8 @@
     }
 
     .logo-img {
-      width: 36px;
-      height: 36px;
+      width: 42px;
+      height: 42px;
       flex-shrink: 0;
     }
 
@@ -152,7 +152,8 @@
       font-size: 18px;
       font-weight: 800;
       color: var(--text);
-      letter-spacing: -0.02em;
+      letter-spacing: 0.04em;
+      text-transform: lowercase;
     }
 
     .logo-full {
