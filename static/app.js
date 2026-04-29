@@ -656,11 +656,23 @@
       }
     }
 
+    function copyText(text, btn) {
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+      });
+    }
+
     function showDetail(s) {
       const p = document.getElementById('detail-panel');
       const c = document.getElementById('detail-content');
       const addr = [s.address, s.suburb, s.state, s.postcode].filter(Boolean).join(', ');
       const directions = directionsUrl(s, addr);
+
+      const catColor = CAT_COLOR[s.category] || '#64748b';
+      p.style.setProperty('--detail-cat-color', catColor);
 
       const srcClass = isOsm(s) ? 'src-osm' : 'src-gov';
       const srcLabel = isOsm(s) ? 'OpenStreetMap' : 'Government';
@@ -694,19 +706,19 @@
         h += `<div class="detail-desc">${highlightAll(s.description, q)}</div>`;
       }
       h += '<div class="detail-actions">';
-      if (s.phone) h += `<a class="detail-action" href="tel:${s.phone}">Call</a>`;
+      if (s.phone) h += `<a class="detail-action primary-green" href="tel:${s.phone}">&#9742; Call</a>`;
+      if (directions) h += `<a class="detail-action primary" href="${directions}" target="_blank" rel="noopener">&#8599; Directions</a>`;
       if (s.website) h += `<a class="detail-action" href="${s.website}" target="_blank" rel="noopener">Website</a>`;
-      if (directions) h += `<a class="detail-action" href="${directions}" target="_blank" rel="noopener">Directions</a>`;
-      h += `<button class="detail-action" type="button" onclick="navigator.clipboard && navigator.clipboard.writeText(location.href)">Copy link</button>`;
+      h += `<button class="detail-action detail-share-btn" type="button">Share</button>`;
       h += `<a class="detail-action" href="${reportIssueUrl(s)}" target="_blank" rel="noopener">Report issue</a>`;
       h += '</div>';
       h += section('Contact', [
-        s.phone && r('Phone', `<a href="tel:${s.phone}">${esc(s.phone)}</a>`),
+        s.phone && r('Phone', `<span class="copyable"><a href="tel:${s.phone}">${esc(s.phone)}</a><button class="copy-btn" type="button" data-copy="${esc(s.phone)}">Copy</button></span>`),
         s.email && r('Email', `<a href="mailto:${s.email}">${esc(s.email)}</a>`),
         s.website && r('Web', `<a href="${s.website}" target="_blank" rel="noopener">${esc(host(s.website))}</a>`),
       ]);
       h += section('Location', [
-        addr && r('Address', esc(addr)),
+        addr && r('Address', `<span class="copyable">${esc(addr)}<button class="copy-btn" type="button" data-copy="${esc(addr)}">Copy</button></span>`),
         r('Precision', esc(locationLabel(s))),
         ((userLocation || placeSearch) && isFinite(s._distance)) && r('Distance', esc(formatDistance(s._distance))),
       ]);
@@ -726,6 +738,21 @@
       ]);
       c.innerHTML = h;
       p.classList.add('visible');
+
+      c.querySelectorAll('.copy-btn[data-copy]').forEach(btn => {
+        btn.addEventListener('click', function() { copyText(this.dataset.copy, this); });
+      });
+
+      const shareBtn = c.querySelector('.detail-share-btn');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', function() {
+          if (navigator.share) {
+            navigator.share({ title: s.name || 'Service', url: location.href }).catch(() => {});
+          } else {
+            copyText(location.href, this);
+          }
+        });
+      }
     }
 
     function r(l,v){return `<span class="dl">${l}</span><span class="dv">${v}</span>`;}
