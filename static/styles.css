@@ -1000,7 +1000,15 @@
     .detail::-webkit-scrollbar { width: 5px; }
     .detail::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-    .detail.visible { display: block; }
+    .detail.visible {
+      display: block;
+      animation: detail-slide-up 0.25s ease-out;
+    }
+
+    @keyframes detail-slide-up {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .detail-x {
       position: sticky;
