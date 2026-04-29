@@ -279,7 +279,7 @@
         sa3Loaded = true;
         return fetch('/static/vendor/au-sa3.json').then(r => r.json()).then(geojson => {
           sa3Layer = L.geoJSON(geojson, {
-            style: { color: '#8b5cf6', weight: 1, opacity: 0.6, fillColor: '#8b5cf6', fillOpacity: 0.04, dashArray: '4 3' },
+            style: { color: '#facc15', weight: 1.5, opacity: 0.85, fillColor: '#facc15', fillOpacity: 0.06, dashArray: '5 4' },
             onEachFeature(feature, layer) {
               layer.bindTooltip(feature.properties.sa3_name_2021, { permanent: false, direction: 'center', className: 'sa3-label', sticky: true });
             }
