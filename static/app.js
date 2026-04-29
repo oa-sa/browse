@@ -621,9 +621,10 @@
         const reportAction = `<a class="svc-action" href="${reportIssueUrl(s)}" target="_blank" rel="noopener" title="Report an issue" onclick="event.stopPropagation()">!</a>`;
         const descHtml = descSnippet(s.description, query);
         const descLine = descHtml ? `<div class="svc-desc">${descHtml}</div>` : '';
+        const catColor = CAT_COLOR[s.category] || '#64748b';
         d.innerHTML = `
           <div class="svc-head">
-            <div class="svc-name">${esc(s.name||'Unnamed')}</div>
+            <div class="svc-name"><span class="svc-cat-dot" style="background:${catColor}"></span>${esc(s.name||'Unnamed')}</div>
             <div class="svc-actions">${phoneAction}${webAction}${reportAction}</div>
           </div>
           ${descLine}
