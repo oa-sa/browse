@@ -139,6 +139,10 @@
       text-decoration: none;
     }
 
+    .logo-img {
+      flex-shrink: 0;
+    }
+
     .logo-mark {
       background: var(--green);
       color: var(--bg);
