@@ -684,6 +684,14 @@
       const vintage = SOURCE_VINTAGE[s.source_id];
 
       let h = `<div class="detail-name">${esc(s.name||'Unnamed')}</div>`;
+      const loc = [s.suburb, s.state, s.postcode].filter(Boolean).join(', ');
+      if (loc) {
+        let locLine = `<span class="detail-loc-text">${esc(loc)}</span>`;
+        if ((userLocation || placeSearch) && isFinite(s._distance)) {
+          locLine += `<span class="detail-loc-dist">${formatDistance(s._distance)}</span>`;
+        }
+        h += `<div class="detail-loc">${locLine}</div>`;
+      }
       h += `<div class="detail-badges">`;
       h += `<span class="svc-tag t-${s.category||'other'}">${CAT[s.category]||'Other'}</span>`;
       h += `<span class="svc-ready ready-${ready.key}">${ready.label}</span>`;
