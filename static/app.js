@@ -703,7 +703,9 @@
       }
       if (s.description) {
         const q = document.getElementById('search').value.trim();
-        h += `<div class="detail-desc">${highlightAll(s.description, q)}</div>`;
+        const longDesc = s.description.length > 200;
+        h += `<div class="detail-desc${longDesc ? ' clamped' : ''}" id="detail-desc-text">${highlightAll(s.description, q)}</div>`;
+        if (longDesc) h += `<button class="detail-desc-toggle" id="detail-desc-toggle" type="button">Show more</button>`;
       }
       h += '<div class="detail-actions">';
       if (s.phone) h += `<a class="detail-action primary-green" href="tel:${s.phone}">&#9742; Call</a>`;
@@ -751,6 +753,16 @@
           } else {
             copyText(location.href, this);
           }
+        });
+      }
+
+      const descToggle = c.querySelector('#detail-desc-toggle');
+      if (descToggle) {
+        descToggle.addEventListener('click', function() {
+          const desc = document.getElementById('detail-desc-text');
+          const expanded = !desc.classList.contains('clamped');
+          desc.classList.toggle('clamped', !expanded);
+          this.textContent = expanded ? 'Show more' : 'Show less';
         });
       }
     }
